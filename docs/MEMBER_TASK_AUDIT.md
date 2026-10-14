@@ -13,7 +13,7 @@ Nguồn ưu tiên là docs/PHAN_CONG_GOC.txt, bản sao nguyên văn file ngư�
 | 3 | 1 | Taxonomy/guideline/multi-aspect: docs/ANNOTATION_GUIDE.md, config/aspects.json | Có guideline; bảy nhóm, đóng gói thuộc product, giá thuộc promotion |
 | 3 | 2 | EDA missing/duplicates/stars/platform/time/length: audit, SQL, outputs/*summary.csv | Đã có kết quả và ghi HDFS, có đối soát tổng |
 | 3 | 3 | Unicode/lowercase/URL/emoji/teen code/tokenization: text.py và sentiment.py | Giữ raw, nhánh feature xử lý hữu hạn; chưa dùng tách từ tiếng Việt chuyên dụng |
-| 4 | 1 | Rà lỗi/nhãn/multi-aspect: docs/MODEL_ERROR_REVIEW.md và annotation_sample.csv | Có rà lỗi AI minh bạch; **chưa có nhãn người đọc độc lập**; không giả ghi thành viên đã gán nhãn |
+| 4 | 1 | Rà lỗi/nhãn/multi-aspect: outputs/sentiment_evaluation.json (errors) và annotation_sample.csv | Có rà lỗi AI minh bạch; **chưa có nhãn người đọc độc lập**; không giả ghi thành viên đã gán nhãn |
 | 4 | 2 | Train/validation/test, feature/input/output HDFS: jobs/train_sentiment.py, sentiment_evaluation.json | Có split nhóm nội dung, kiểm tra leakage và fit feature trên train |
 | 4 | 3 | So sánh LR/SVM, Accuracy/P/R/F1/confusion: sentiment_evaluation.json, sentiment_train log | Đã chạy thực tế; metrics theo nhãn sao thay thế; PhoBERT để hướng phát triển do tài nguyên/nhãn |
 | 5 | 1 | Phân tích khía cạnh/sàn/thời gian: bảng CSV, report_charts, báo cáo PDF | Có kết quả, insight và giới hạn diễn giải |

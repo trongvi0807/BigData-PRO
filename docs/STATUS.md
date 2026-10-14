@@ -6,4 +6,4 @@
 
 Đã bổ sung supervised baseline LR/SVM, split nội dung 70/10/20, feature chỉ fit train, test riêng, kiểm tra portable inference khớp Spark. Nhãn là sao thay thế, không nhãn người đọc. Dashboard/index được tái tạo toàn tập; Kafka đã lưu 1.000 review unique từ replay lịch sử. DAG mới 10 task gồm mô hình và đối soát dashboard; kết quả cuối xem outputs/demo_evidence.json và outputs/submission_validation.json.
 
-Báo cáo nộp mới: reports/Bao_cao_Bigdata_hoan_thien.pdf. Không dùng PDF tiến độ ngày 14/10 làm báo cáo cuối. Nhật ký và kiểm tra phân công ở IMPLEMENTATION_JOURNAL.md và MEMBER_TASK_AUDIT.md. Chưa có lịch sử Git/nhật ký cá nhân cũ để xác nhận đóng góp từng thành viên. Không tạo tác giả/commit hồi tố.
+Báo cáo cuối: báo cáo PDF cuối chưa tạo theo lựa chọn của người dùng. Không dùng PDF tiến độ ngày 14/10 làm báo cáo cuối. Nhật ký và kiểm tra phân công ở IMPLEMENTATION_JOURNAL.md và MEMBER_TASK_AUDIT.md. Chưa có lịch sử Git/nhật ký cá nhân cũ để xác nhận đóng góp từng thành viên. Không tạo tác giả/commit hồi tố.

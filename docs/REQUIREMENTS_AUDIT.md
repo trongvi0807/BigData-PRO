@@ -1,6 +1,8 @@
 # Đối chiếu yêu cầu môn Big Data
 
-Kết luận cần đọc kèm outputs/submission_validation.json sau kiểm tra cuối: dự án dùng hướng phân tích dữ liệu để đáp ứng yêu cầu số 4, đồng thời bổ sung baseline ML nhãn sao thay thế. Không tự chấm điểm hoặc cam kết 10/10 vì rubric là mức tối đa và còn phụ thuộc đánh giá của thầy.
+Theo lựa chọn mới của người dùng, phiên này chỉ hoàn thiện mã nguồn và kiểm chứng; chưa tạo báo cáo PDF cuối hoặc xác nhận đóng góp cá nhân. Không kết luận hồ sơ nộp đã đầy đủ.
+
+Kết luận kỹ thuật cần đọc kèm outputs/submission_validation.json sau kiểm tra cuối: dự án dùng hướng phân tích dữ liệu để đáp ứng yêu cầu số 4, đồng thời bổ sung baseline ML nhãn sao thay thế. Không tự chấm điểm hoặc cam kết 10/10 vì rubric là mức tối đa và còn phụ thuộc đánh giá của thầy.
 
 | Yêu cầu | Mã nguồn/lệnh | Log và kết quả |
 |---|---|---|
@@ -10,7 +12,7 @@ Kết luận cần đọc kèm outputs/submission_validation.json sau kiểm tra
 | 4a Phân tích, chỉ số/bảng/biểu đồ/insight | analyze()/Spark SQL, render_report_charts.py | platform/month/rating/aspect/length/spam CSV, PNG/SVG, báo cáo diễn giải giới hạn |
 | 4b ML bổ sung | jobs/train_sentiment.py, shared feature/inference | LR/SVM train/validation/test theo nhóm, Accuracy/P/R/F1/confusion/baseline, HDFS model và sentiment_evaluation.json; nhãn sao proxy |
 | 5 Airflow điều phối | dags/ecommerce_pipeline.py, 10 task nối dependency, retry | demo_evidence.json đúng run ID 20261015; logs/airflow_tasks đầy đủ attempt, gồm lỗi và phục hồi |
-| Báo cáo PDF, source, README | reports/Bao_cao_Bigdata_hoan_thien.pdf, Git history, package_submission.py | ZIP source/minh chứng và MANIFEST_SHA256 đối chiếu bytes/hash |
+| Báo cáo PDF, source, README | báo cáo PDF cuối chưa tạo theo lựa chọn của người dùng, Git history, package_submission.py | ZIP source/minh chứng và MANIFEST_SHA256 đối chiếu bytes/hash |
 | Dashboard có ảnh và dùng output pipeline | prepare_dashboard.py → build_dashboard_index.py → dashboard/server.py | generation/cube 1.910 ô/index 1.299.873 review, dashboard_validation, dashboard_demo_validation, screenshots mới |
 | Nhật ký, lỗi, commit, đóng góp | IMPLEMENTATION_JOURNAL.md, MEMBER_TASK_AUDIT.md, git log | Có nhật ký và commit mới thật; chưa có bằng chứng cá nhân lịch sử, không dựng lại hoặc gán tác giả giả |
 | Loại mật khẩu/API key/token | init_local_env.py, .env.example trống, Compose ${...}, .gitignore, allowlist ZIP | .env không tracked và không nằm trong archive; package scanner kiểm tra byte bí mật thực không xuất hiện |

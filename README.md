@@ -70,11 +70,11 @@ python3 scripts/check_submission.py
 
 TF-IDF âm tiết unigram/bigram + Logistic Regression/Linear SVM; vocabulary/IDF chỉ fit trên train. Chia 70/10/20 theo nhóm nội dung chuẩn hóa, cùng nội dung giữa các sàn không lọt sang tập khác; vẫn chưa giải quyết near-duplicate hay kiểm chứng ngoài thời gian. Chọn hyperparameter bằng validation, báo cáo test cuối và majority baseline. **Nhãn sao 1/2 negative, 4/5 positive chỉ là proxy; bỏ sao 3**. Không có nhãn cảm xúc/khía cạnh do người đọc xác thực; không báo cáo F1 khía cạnh hoặc giả gọi sao là ground truth cảm xúc.
 
-Khía cạnh là luật đề cập đa nhãn; cảm xúc demo ở mức toàn review. K-Means khám phá trên mẫu 25% review sao thấp, silhouette thấp; không diễn giải thành độ chính xác phân loại. [Nghiên cứu liên quan](docs/LITERATURE_REVIEW.md), [guideline nhãn](docs/ANNOTATION_GUIDE.md), [rà soát lỗi](docs/MODEL_ERROR_REVIEW.md).
+Khía cạnh là luật đề cập đa nhãn; cảm xúc demo ở mức toàn review. K-Means khám phá trên mẫu 25% review sao thấp, silhouette thấp; không diễn giải thành độ chính xác phân loại. [Nghiên cứu liên quan](docs/LITERATURE_REVIEW.md), [guideline nhãn](docs/ANNOTATION_GUIDE.md), lỗi test trong outputs/sentiment_evaluation.json.
 
 ## Hồ sơ nộp và kiểm chứng
 
-Báo cáo mới: reports/Bao_cao_Bigdata_hoan_thien.pdf. Bộ source/minh chứng: submission/Source_va_minh_chung_Bigdata.zip, tạo bằng scripts/package_submission.py. Kiểm tra outputs/submission_validation.json và MANIFEST_SHA256.json. File phân công gốc được giữ trong docs/PHAN_CONG_GOC.txt; kế hoạch không được dùng làm bằng chứng đóng góp cá nhân. Git history mới ghi công việc tự động thực sự từ phiên này, không tạo commit giả/hồi tố cho sinh viên.
+Theo lựa chọn của người dùng, phiên này chỉ hoàn thiện mã nguồn và kiểm chứng; chưa tạo báo cáo PDF cuối. Báo cáo tiến độ cũ chưa phản ánh các bổ sung mới. Bộ source/minh chứng: submission/Source_va_minh_chung_Bigdata.zip, tạo bằng scripts/package_submission.py. Kiểm tra outputs/submission_validation.json và MANIFEST_SHA256.json. File phân công gốc được giữ trong docs/PHAN_CONG_GOC.txt; kế hoạch không được dùng làm bằng chứng đóng góp cá nhân. Git history mới ghi công việc tự động thực sự từ phiên này, không tạo commit giả/hồi tố cho sinh viên.
 
 ```bash
 docker compose exec -T spark-client python -m unittest discover -s tests -v

@@ -30,11 +30,11 @@ def verify():
     ml=read('outputs/sentiment_evaluation.json')
     require(not any(ml['leakage_checks'].values()) and ml['portable_predictions_checked']>0,'Model split/serving validation failed')
     require(read('outputs/dashboard_validation.json')['all_spark_cube_counts_match_full_index'] is True,'Dashboard counts failed')
-    require((ROOT/'reports/Bao_cao_Bigdata_hoan_thien.pdf').stat().st_size>10000,'Missing final PDF')
     commits=subprocess.check_output(['git','log','--format=%h %s'],cwd=ROOT,text=True)
     require(bool(commits.strip()),'Missing actual Git history')
-    report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Saved artifacts plus source/log cross-checks; not a live cluster check',
+    report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Technical saved artifacts and source/log cross-checks; final report excluded at user request; not a live cluster check',
             'airflow_tasks':len(tasks),'clean_rows':quality['clean_rows'],'ml_label_source':ml['label_source'],
+            'final_report':'Not created at user request',
             'individual_contributions':'Not independently attributable from the supplied plan; no fabricated member commits'}
     (ROOT/'outputs/submission_validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps(report,ensure_ascii=False,indent=2))

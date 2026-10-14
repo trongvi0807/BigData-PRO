@@ -8,6 +8,7 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from dashboard.server import Store
+from review_analytics.io import atomic_write_text
 
 
 def main():
@@ -35,7 +36,7 @@ def main():
     result = {"verified_utc": datetime.now(timezone.utc).isoformat(), "generation": metadata["generation"],
         "indexed_reviews": metadata["indexed_rows"], "cube_cells_verified": len(actual),
         "metrics_per_cell": len(metrics), "all_spark_cube_counts_match_full_index": True}
-    (root / "dashboard_validation.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
+    atomic_write_text(root / "dashboard_validation.json", json.dumps(result, indent=2))
     print(json.dumps(result))
 
 

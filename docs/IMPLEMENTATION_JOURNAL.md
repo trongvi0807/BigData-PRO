@@ -11,6 +11,6 @@ Mốc bên dưới thuộc phiên kiểm tra ngày 15/10/2026 theo Asia/Ho_Chi_M
 | Mô hình bổ sung | TF-IDF + LR/SVM, chọn bằng validation, test riêng theo nhóm nội dung; đối chiếu 100 dự đoán phục vụ với Spark | Một dấu ngoặc thiếu ở script mới: lưu log lỗi rồi sửa; log root tạo không ghi đè được: sửa owner outputs, chạy lại |
 | Streaming | Topic 3 partition; producer replay 1.000 review; Structured Streaming → HDFS | Checkpoint và dedup giữ ID qua chạy lại; không giả gọi dữ liệu replay là thu thập trực tiếp |
 | Điều phối và demo | DAG mở rộng 10 task; dashboard cube và chỉ mục toàn tập; demo dùng hệ số model xuất từ HDFS/Spark | Công cụ UI bị cùng lỗi sandbox; dùng Chromium headless và HTTP để ghi minh chứng giao diện |
-| Hồ sơ nộp | Báo cáo PDF, bảng đối chiếu yêu cầu/phân công, lịch sử Git mới, ZIP/manifest không có secrets | Không có lịch sử cá nhân cũ để phục dựng; không gán commit tự động cho thành viên |
+| Hồ sơ nộp | Người dùng chọn chỉ hoàn thiện mã nguồn/kiểm chứng; chưa tạo PDF cuối, bảng đối chiếu yêu cầu/phân công, lịch sử Git mới, ZIP/manifest không có secrets | Không có lịch sử cá nhân cũ để phục dựng; không gán commit tự động cho thành viên |
 
 Kết quả chốt từng bước phải đọc ở outputs/demo_evidence.json, outputs/submission_validation.json và log tương ứng, không lấy dòng kế hoạch làm bằng chứng đã chạy. Các artifact ngày 12/10 được giữ ở outputs/history/20261012; kết quả nộp mới dùng lần chạy 15/10.
