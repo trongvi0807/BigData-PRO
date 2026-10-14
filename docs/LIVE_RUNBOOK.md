@@ -30,3 +30,11 @@ curl -fsS 'http://localhost:8090/api/bootstrap?source=live'
 ```
 
 Browser HDFS: http://localhost:9870/explorer.html#/ecommerce/live . Dashboard: http://localhost:8090 . Airflow: http://localhost:8080 . collection_status.json ghi fetched/new/updated/unchanged và lỗi theo app; lỗi nguồn không được biến thành review giả. live/current.json và generation dashboard_validation.json liên kết với log DAG, Kafka raw và Parquet thật. Nhánh phân tích dùng số sao làm tín hiệu; chưa có nhãn ABSA do người đọc xác thực.
+
+### Toàn bộ dữ liệu và Clear bộ lọc
+
+Nguồn mặc định `Toàn bộ dữ liệu` (`?source=all`) ghép hai đầu ra HDFS đã kiểm chứng: dataset lịch sử và review thật mới thu thập. Phạm vi hiện tại 06/2013–10/2026. Khi review trùng khóa xuất hiện ở hai nguồn, phiên bản live thay thế bản lịch sử trong cả biểu đồ, tìm kiếm và xuất CSV. Không tạo dữ liệu cho các tháng không có review.
+
+Bấm `Clear bộ lọc` hoặc xóa trống một ô tháng sẽ trở về toàn bộ dữ liệu, chọn mọi sàn, toàn khoảng tháng, bỏ loại spam, từ khóa, số sao và khía cạnh. Bộ lọc vẫn tự chạy khi thay đổi. Khi snapshot mới có tháng mới, mốc đầu/cuối tự mở rộng nếu đang chọn toàn khoảng; phạm vi tùy chọn được giữ lại.
+
+Minh chứng: `outputs/clear_filters_validation.json`, `outputs/combined_source_validation.json`, `outputs/logs/clear_filters_browser_20261015.log` và `outputs/screenshots/11-clear-all-data-20261015.png`. Kiểm chứng độc lập: `python3 scripts/verify_combined_source.py`.

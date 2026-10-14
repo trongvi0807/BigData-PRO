@@ -47,11 +47,15 @@ def verify():
     live_browser=read('outputs/live_dashboard_validation.json')
     require(live_meta['source_mode']=='google_play_live' and live_browser['generation']==live['generation'],'Real-source browser generation mismatch')
     require(live_browser['verification']=='passed' and live_browser['real_review_count']==live_meta['processed_rows'],'Real-source API/HDFS count mismatch')
+    clear=read('outputs/clear_filters_validation.json')
+    combined=read('outputs/combined_source_validation.json')
+    require(clear['verification']==combined['verification']=='passed','Combined source/Clear validation failed')
+    require(clear['total_reviews']==combined['total_reviews'],'Combined browser/index counts differ')
     commits=subprocess.check_output(['git','log','--format=%h %s'],cwd=ROOT,text=True)
     require(bool(commits.strip()),'Missing actual Git history')
     report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Technical saved artifacts and source/log cross-checks; final report excluded at user request; not a live cluster check',
             'airflow_tasks':len(tasks),'clean_rows':quality['clean_rows'],'ml_label_source':ml['label_source'],
-            'automatic_filters':'passed','real_google_play_reviews':live_meta['processed_rows'],
+            'automatic_filters':'passed','clear_filters':'passed','combined_reviews':clear['total_reviews'],'real_google_play_reviews':live_meta['processed_rows'],
             'live_source':'google_play_live','final_report':'Not created at user request',
             'individual_contributions':'Not independently attributable from the supplied plan; no fabricated member commits'}
     (ROOT/'outputs/submission_validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))

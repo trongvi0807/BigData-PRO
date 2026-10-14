@@ -69,13 +69,14 @@ function renderAspects(){
  $("cluster-grid").innerHTML=(c.clusters||[]).map(cluster=>{const example=(c.examples||[]).find(e=>e.prediction===cluster.cluster);return `<article class="cluster-card"><h3>Cụm khám phá ${cluster.cluster+1}</h3><div class="terms">${cluster.top_terms.slice(0,12).map(term=>`<span class="term">${esc(term)}</span>`).join("")}</div>${example?`<div class="cluster-quote">“${esc(example.content)}”<br><small>${esc(example.platform)} · ví dụ trong mẫu phân cụm</small></div>`:""}</article>`;}).join("");
 }
 
+function mLiveCount(){return state.boot.metadata.live_rows||0;}
 function renderPipeline(){
  const boot=state.boot,q=boot.quality,e=boot.evidence,v=boot.validation;
  const stages={"01_collect_real_reviews":"Thu thập review Google Play thật","02_kafka_to_hdfs":"Kafka → HDFS","03_publish_verified_snapshot":"Tổng hợp và công bố kết quả","04_verify_live_results":"Đối soát dữ liệu mới","01_prepare_hdfs":"Chuẩn bị HDFS","02_upload_csv":"Upload CSV nguồn","03_read_with_spark":"Đọc bằng Spark","04_clean_to_parquet":"Làm sạch → Parquet","05_spark_sql":"Spark SQL","06_review_aspects_and_kmeans":"Khía cạnh & K-Means","06b_train_sentiment_proxy":"Huấn luyện mô hình cảm xúc","07_save_results":"Lưu kết quả","08_kafka_replay_and_stream":"Kafka & Structured Streaming","09_verify_completion":"Đối soát dữ liệu thật"};
- const tasks=e.airflow?.tasks||[];$("dag-heading").textContent=`Điều phối ${tasks.length||(state.source==="live"?4:10)} bước bằng Airflow`;$("dag-badge").textContent=`${tasks.filter(t=>t.state==="success").length}/${tasks.length||"—"} tác vụ đạt · ${e.spark_alive_workers||"—"} worker / ${e.spark_total_cores||"—"} core`;
- $("quality-flow").innerHTML=[["Record gốc",q.raw_rows],["Quarantine",q.quarantined_rows],[state.source==="live"?"Phiên bản cũ thay thế":"Bản sao ID loại bỏ",q.duplicate_valid_id_rows_removed],["Review được giữ",q.clean_rows]].map(([name,value])=>`<div class="quality-box"><span>${name}</span><b>${num(value)}</b></div>`).join("");
+ const tasks=e.airflow?.tasks||[];$("dag-heading").textContent=`Điều phối ${tasks.length||(state.source!=="historical"?4:10)} bước bằng Airflow`;$("dag-badge").textContent=`${tasks.filter(t=>t.state==="success").length}/${tasks.length||"—"} tác vụ đạt · ${e.spark_alive_workers||"—"} worker / ${e.spark_total_cores||"—"} core`;
+ $("quality-flow").innerHTML=[["Record gốc",q.raw_rows],["Quarantine",q.quarantined_rows],[state.source!=="historical"?"Phiên bản cũ/trùng ID":"Bản sao ID loại bỏ",q.duplicate_valid_id_rows_removed],["Review được giữ",q.clean_rows]].map(([name,value])=>`<div class="quality-box"><span>${name}</span><b>${num(value)}</b></div>`).join("");
  $("dag-steps").innerHTML=tasks.map((task,i)=>`<div class="dag-step"><span class="step-number">${String(i+1).padStart(2,"0")}</span><span>${stages[task.task_id]||"Tác vụ pipeline"}</span><span>${task.state==="success"?"✓ Thành công":"Chưa có bằng chứng"}</span></div>`).join("");
- $("stream-stats").innerHTML=`<div><b>${num(e.kafka_total_offsets)}</b><small>${state.source==="live"?"Offsets Kafka từ thu thập thật":"Offsets Kafka sau hai lượt replay"}</small></div><div><b>${num(v.streaming_unique_keys)}</b><small>Review duy nhất trên HDFS</small></div>`;
+ $("stream-stats").innerHTML=`<div><b>${num(e.kafka_total_offsets)}</b><small>${state.source!=="historical"?"Offsets Kafka từ thu thập thật":"Offsets Kafka sau hai lượt replay"}</small></div><div><b>${num(state.source==="all"?mLiveCount():v.streaming_unique_keys)}</b><small>Review duy nhất trên HDFS</small></div>`;
  const rows=boot.stream_batches,w=480,h=230,l=30,baseline=195,gap=(w-2*l)/Math.max(rows.length,1),max=Math.max(...rows.map(r=>r.new_unique_events),1);let body=`<line x1="${l}" x2="${w-l}" y1="${baseline}" y2="${baseline}" stroke="#dfe7ea"/>`;
  rows.forEach((r,i)=>{const height=r.new_unique_events/max*150,x=l+i*gap+12;body+=`<rect x="${x}" y="${baseline-Math.max(height,2)}" width="${Math.max(gap-24,6)}" height="${Math.max(height,2)}" rx="4" fill="${r.new_unique_events?"#72a994":"#d7e3e7"}"/>`+text(x+(gap-24)/2,baseline-height-9,num(r.new_unique_events),'text-anchor="middle"')+text(x+(gap-24)/2,218,"Batch "+r.batch_id,'text-anchor="middle"');});$("stream-chart").innerHTML=svg(w,h,body,"Review duy nhất mới trong các microbatch");
  const lines=(boot.query_plan||"").split("\n");const start=lines.findIndex(line=>line.includes("Physical Plan"));$("query-plan").textContent=lines.slice(start>=0?start:0).join("\n");
@@ -93,7 +94,7 @@ async function loadReviews(){
 }
 
 function drill(aspect,platform="all"){$("review-aspect").value=aspect;$("review-platform").value=platform;$("review-score").value="low";$("review-query").value="";state.offset=0;setView("reviews");}
-function setView(view){if(!names[view])view="overview";state.view=view;document.querySelectorAll(".view").forEach(el=>el.classList.toggle("active",el.id==="view-"+view));document.querySelectorAll(".nav-item").forEach(el=>el.classList.toggle("active",el.dataset.view===view));$("filter-form").classList.toggle("hidden",view==="pipeline");document.querySelector(".filter-caption").classList.toggle("hidden",view==="pipeline");$("export-summary").classList.toggle("hidden",view==="pipeline");$("crumb").textContent=names[view];$("page-title").textContent=headings[view][0];$("page-subtitle").textContent=headings[view][1];if(location.hash!=="#"+view)history.replaceState(null,"","#"+view);if(view==="reviews"&&state.data)loadReviews();window.scrollTo({top:0,behavior:"smooth"});}
+function setView(view,{fetchReviews=true}={}){if(!names[view])view="overview";state.view=view;document.querySelectorAll(".view").forEach(el=>el.classList.toggle("active",el.id==="view-"+view));document.querySelectorAll(".nav-item").forEach(el=>el.classList.toggle("active",el.dataset.view===view));$("filter-form").classList.toggle("hidden",view==="pipeline");document.querySelector(".filter-caption").classList.toggle("hidden",view==="pipeline");$("export-summary").classList.toggle("hidden",view==="pipeline");$("crumb").textContent=names[view];$("page-title").textContent=headings[view][0];$("page-subtitle").textContent=headings[view][1];if(location.hash!=="#"+view)history.replaceState(null,"","#"+view);if(fetchReviews&&view==="reviews"&&state.data)loadReviews();window.scrollTo({top:0,behavior:"smooth"});}
 
 function filterValues(){
  const platforms=[...document.querySelectorAll("#platform-filters input:checked")].map(input=>input.value);
@@ -107,17 +108,23 @@ function guardPlatforms(){
 }
 function scheduleFilters(event){
  guardPlatforms();
- const metadata=state.boot?.metadata;
- if(metadata){
-  if(!$("from-month").value)$("from-month").value=metadata.month_min;
-  if(!$("to-month").value)$("to-month").value=metadata.month_max;
- }
+ if(["from-month","to-month"].includes(event?.target.id)&&!event.target.value){resetAllFilters();return;}
  if($("from-month").value&&$("to-month").value&&$("from-month").value>$("to-month").value){
   if(event?.target.id==="to-month")$("from-month").value=$("to-month").value;
   else $("to-month").value=$("from-month").value;
  }
  clearTimeout(state.filterTimer);state.filterToken++;state.reviewToken++;
  state.filterTimer=setTimeout(()=>applyFilters(),180);
+}
+function selectSource(source){state.source=source;const url=new URL(location.href);url.searchParams.set("source",source);history.replaceState(null,"",url);}
+async function resetAllFilters(){
+ clearTimeout(state.filterTimer);clearTimeout(state.reviewTimer);
+ state.filterToken++;state.reviewToken++;state.offset=0;
+ selectSource("all");$("exclude-spam").checked=false;
+ $("review-query").value="";$("review-score").value="all";
+ $("review-aspect").value="all";$("review-platform").value="all";
+ await initialize();
+ toast("Đã xóa bộ lọc · toàn bộ dữ liệu lịch sử và review mới.");
 }
 function scheduleReviews(){clearTimeout(state.reviewTimer);state.reviewToken++;state.offset=0;state.reviewTimer=setTimeout(loadReviews,300);}
 async function applyFilters({resetPage=true}={}){
@@ -141,29 +148,32 @@ function renderSnapshot(){
  const boot=state.boot,m=boot.metadata;
  $("sidebar-count").textContent=num(m.processed_rows);
  $("snapshot-date").textContent="Snapshot: "+new Intl.DateTimeFormat("vi-VN",{dateStyle:"short",timeStyle:"short",timeZone:"Asia/Ho_Chi_Minh"}).format(new Date(m.prepared_utc));
- $("data-source").value=state.source||"historical";
+ $("data-source").value=state.source||"all";
  const live=boot.sources?.live;$("data-source").querySelector('[value="live"]').disabled=!live?.ready;
  $("source-period").textContent=m.month_min+" → "+m.month_max;
- $("source-mode").textContent=state.source==="live"?"REVIEW MỚI THU THẬP":"SNAPSHOT NGHIÊN CỨU";
- $("snapshot-kind").textContent=state.source==="live"?"Google Play đang thu thập":"Dữ liệu lịch sử";
- $("stream-note").textContent=state.source==="live"?"Dữ liệu từ Google Play thật, khử trùng phiên bản bằng checkpoint. Phiên bản review mới nhất được dùng cho biểu đồ.":"Replay dữ liệu lịch sử; checkpoint ngăn lưu trùng qua các lần chạy.";
- $("method-source").textContent=state.source==="live"?"Review mới được thu thập trực tiếp từ Google Play. Ngày viết review giữ nguyên; thời điểm thu thập hiển thị riêng.":"Tập dữ liệu lịch sử kết thúc tháng 08/2022.";
+ $("source-mode").textContent=state.source==="all"?"TOÀN BỘ DỮ LIỆU":state.source==="live"?"REVIEW MỚI THU THẬP":"SNAPSHOT NGHIÊN CỨU";
+ $("snapshot-kind").textContent=state.source==="all"?"Lịch sử + review mới":state.source==="live"?"Google Play đang thu thập":"Dữ liệu lịch sử";
+ $("stream-note").textContent=state.source!=="historical"?"Dữ liệu từ Google Play thật, khử trùng phiên bản bằng checkpoint. Phiên bản review mới nhất được dùng cho biểu đồ.":"Replay dữ liệu lịch sử; checkpoint ngăn lưu trùng qua các lần chạy.";
+ $("method-source").textContent=state.source==="all"?"Tổng hợp dataset lịch sử và review Google Play thật mới thu thập. Review trùng ID dùng phiên bản mới; không bổ sung dữ liệu giả vào những tháng không có nguồn.":state.source==="live"?"Review mới được thu thập trực tiếp từ Google Play. Ngày viết review giữ nguyên; thời điểm thu thập hiển thị riêng.":"Tập dữ liệu lịch sử kết thúc tháng 08/2022.";
  const poll=boot.collection;
- $("collection-status").classList.toggle("hidden",state.source!=="live");
- if(poll)$("collection-status").textContent=`Lần thu thập ${new Date(poll.completed_utc).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"})}: ${num(poll.new_reviews)} review mới, ${num(poll.updated_reviews)} cập nhật. ${poll.errors.length?"Một số nguồn chưa lấy được: "+poll.errors.map(e=>e.platform).join(", ")+".":""}`;
+ $("collection-status").classList.toggle("hidden",state.source==="historical");
+ if(poll?.completed_utc)$("collection-status").textContent=`Lần thu thập ${new Date(poll.completed_utc).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"})}: ${num(poll.new_reviews)} review mới, ${num(poll.updated_reviews)} cập nhật. ${poll.errors.length?"Một số nguồn chưa lấy được: "+poll.errors.map(e=>e.platform).join(", ")+".":""}`;
 }
 async function refreshSnapshot(){
  if(state.polling||document.hidden)return;
  state.polling=true;
+ const initToken=state.initToken,source=state.source;
  try{
   if(!state.boot){await initialize();return;}
   const next=await api("/api/bootstrap");
+  if(initToken!==state.initToken||source!==state.source)return;
   if(JSON.stringify(next)!==JSON.stringify(state.boot)){
-   const changed=next.metadata.generation!==state.boot.metadata.generation;
+   const previous=state.boot.metadata;
+   const changed=next.metadata.generation!==previous.generation;
    state.boot=next;renderSnapshot();renderPipeline();
    if(changed){
     const m=next.metadata;
-    for(const id of ["from-month","to-month"]){const field=$(id);field.min=m.month_min;field.max=m.month_max;if(field.value<m.month_min)field.value=m.month_min;if(field.value>m.month_max)field.value=m.month_max;}
+    for(const id of ["from-month","to-month"]){const field=$(id),edge=id==="from-month"?"month_min":"month_max";if(field.value===previous[edge])field.value=m[edge];field.min=m.month_min;field.max=m.month_max;if(field.value<m.month_min)field.value=m.month_min;if(field.value>m.month_max)field.value=m.month_max;}
     await applyFilters({resetPage:false});
    }
   }
@@ -176,20 +186,21 @@ function exportChart(id){const chart=$(id).querySelector("svg");if(!chart){toast
 
 async function initialize(){
  const initToken=++state.initToken;
- $("loading").classList.remove("hidden");$("error").classList.add("hidden");
- try{const boot=await api("/api/bootstrap");if(initToken!==state.initToken)return;state.boot=boot;state.source=state.boot.source||state.source||"historical";const m=state.boot.metadata;
+ $("loading").classList.toggle("hidden",Boolean(state.data));$("error").classList.add("hidden");
+ try{const boot=await api("/api/bootstrap");if(initToken!==state.initToken)return;state.boot=boot;state.source=state.boot.source||state.source||"all";const m=state.boot.metadata;
   $("sidebar-count").textContent=num(m.processed_rows);
   $("platform-filters").innerHTML=state.boot.platforms.map(p=>`<label class="platform-chip" style="--color:${colors[p]};--tint:${tints[p]}"><input type="checkbox" value="${p}" checked aria-label="Chọn ${p}"><span><i></i>${p}</span></label>`).join("");
   for(const id of ["from-month","to-month"]){$(id).min=m.month_min;$(id).max=m.month_max;}
   $("from-month").value=m.month_min;$("to-month").value=m.month_max;
   $("review-aspect").innerHTML='<option value="all">Tất cả khía cạnh</option><option value="unmatched">Chưa gán khía cạnh</option>'+m.aspects.map(a=>`<option value="${a.code}">${esc(a.label)}</option>`).join("");
   $("snapshot-date").textContent="Snapshot: "+new Intl.DateTimeFormat("vi-VN",{dateStyle:"short",timeStyle:"short",timeZone:"Asia/Ho_Chi_Minh"}).format(new Date(m.prepared_utc));
-  state.filters={platforms:state.boot.platforms,from:m.month_min,to:m.month_max,exclude_spam:false};guardPlatforms();renderSnapshot();renderPipeline();await applyFilters();if(initToken!==state.initToken)return;$("content").classList.remove("hidden");setView(location.hash.slice(1)||"overview");
+  state.filters={platforms:state.boot.platforms,from:m.month_min,to:m.month_max,exclude_spam:false};guardPlatforms();renderSnapshot();renderPipeline();await applyFilters();if(initToken!==state.initToken)return;$("content").classList.remove("hidden");setView(location.hash.slice(1)||"overview",{fetchReviews:state.view!=="reviews"});state.readyInitToken=initToken;
  }catch(error){if(initToken===state.initToken)showError(error);}finally{if(initToken===state.initToken)$("loading").classList.add("hidden");}
 }
 
 document.querySelectorAll("[data-view]").forEach(button=>button.onclick=()=>setView(button.dataset.view));
 document.querySelectorAll("[data-goto]").forEach(button=>button.onclick=()=>setView(button.dataset.goto));
+$("clear-filters").onclick=resetAllFilters;
 $("filter-form").onsubmit=event=>{event.preventDefault();clearTimeout(state.filterTimer);applyFilters();};
 $("filter-form").addEventListener("change",scheduleFilters);
 $("review-form").onsubmit=event=>{event.preventDefault();clearTimeout(state.reviewTimer);state.offset=0;loadReviews();};
@@ -204,7 +215,7 @@ document.querySelectorAll("[data-chart]").forEach(button=>button.onclick=()=>exp
 $("export-summary").onclick=()=>{if(state.data)window.location.href="/api/export.csv?"+params();};
 $("export-reviews").onclick=()=>{if(state.data)window.location.href="/api/export-reviews.csv?"+reviewParams();};
 $("print").onclick=()=>window.print();
-$("data-source").onchange=async()=>{state.filterToken++;state.reviewToken++;clearTimeout(state.filterTimer);clearTimeout(state.reviewTimer);state.source=$("data-source").value;await initialize();};
+$("data-source").onchange=async()=>{state.filterToken++;state.reviewToken++;clearTimeout(state.filterTimer);clearTimeout(state.reviewTimer);selectSource($("data-source").value);await initialize();};
 setInterval(refreshSnapshot,10000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){if(state.boot)refreshSnapshot();else initialize();}});
 window.addEventListener("hashchange",()=>setView(location.hash.slice(1)));

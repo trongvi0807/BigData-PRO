@@ -68,3 +68,11 @@ Sao 1–2 là tín hiệu thay thế cho không hài lòng. Khía cạnh đượ
 Để dùng với nguồn mới: lưu snapshot raw mới, xác thực schema và phạm vi thời gian, chạy lại pipeline rồi công bố snapshot phục vụ. Nhánh Google Play mới đã có ở LIVE_RUNBOOK.md; tích hợp hệ thống nội bộ của sàn chưa có.
 
 Giao diện tự kiểm tra snapshot mới mỗi 10 giây và giữ bộ lọc. Nguồn Review mới thu thập dùng DAG bốn bước theo lịch 5 phút; phần K-Means lịch sử không được gán thành kết quả huấn luyện trên review mới.
+
+### Toàn bộ dữ liệu và Clear bộ lọc
+
+Nguồn mặc định `Toàn bộ dữ liệu` (`?source=all`) ghép hai đầu ra HDFS đã kiểm chứng: dataset lịch sử và review thật mới thu thập. Phạm vi hiện tại 06/2013–10/2026. Khi review trùng khóa xuất hiện ở hai nguồn, phiên bản live thay thế bản lịch sử trong cả biểu đồ, tìm kiếm và xuất CSV. Không tạo dữ liệu cho các tháng không có review.
+
+Bấm `Clear bộ lọc` hoặc xóa trống một ô tháng sẽ trở về toàn bộ dữ liệu, chọn mọi sàn, toàn khoảng tháng, bỏ loại spam, từ khóa, số sao và khía cạnh. Bộ lọc vẫn tự chạy khi thay đổi. Khi snapshot mới có tháng mới, mốc đầu/cuối tự mở rộng nếu đang chọn toàn khoảng; phạm vi tùy chọn được giữ lại.
+
+Minh chứng: `outputs/clear_filters_validation.json`, `outputs/combined_source_validation.json`, `outputs/logs/clear_filters_browser_20261015.log` và `outputs/screenshots/11-clear-all-data-20261015.png`. Kiểm chứng độc lập: `python3 scripts/verify_combined_source.py`.

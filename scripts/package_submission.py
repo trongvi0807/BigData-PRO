@@ -14,7 +14,7 @@ def package():
     selected={ROOT/name for name in tracked if name and not name.startswith(('reports/','outputs/','artifacts/','submission/'))}
     current=['data_quality.json','raw_inspection.json','batch_success.json','cluster_metadata.json','demo_evidence.json',
              'persisted_validation.json','dashboard_preparation.json','dashboard_validation.json','sentiment_evaluation.json',
-             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','submission_validation.json','spark_query_plan.txt',
+             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','clear_filters_validation.json','combined_source_validation.json','submission_validation.json','spark_query_plan.txt',
              'quality_before_airflow.json','platform_summary.csv','monthly_summary.csv','rating_distribution.csv',
              'aspect_mentions.csv','unmatched_low_ratings.csv','spam_sensitivity.csv','review_length_summary.csv','dashboard_cube.csv']
     selected.update(ROOT/'outputs'/name for name in current)

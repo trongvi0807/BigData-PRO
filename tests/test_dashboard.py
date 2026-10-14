@@ -6,7 +6,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from dashboard.server import Store, csv_safe
+from dashboard.server import Store, CombinedStore, csv_safe
 from scripts.build_dashboard_index import build
 
 
@@ -44,6 +44,60 @@ class DashboardDataTests(unittest.TestCase):
 
     def tearDown(self):
         self.directory.cleanup()
+
+    def combined_fixture(self):
+        self.meta.update(prepared_utc="2022-09-01T00:00:00+00:00", hdfs_serving_source="hdfs://historical")
+        (self.root / "dashboard_preparation.json").write_text(json.dumps(self.meta))
+        live_root = self.root / "live-fixture"
+        live_root.mkdir()
+        meta = {**self.meta, "generation": "live-fixture", "processed_rows": 3,
+                "month_min": "2026-09", "month_max": "2026-10",
+                "prepared_utc": "2026-10-15T00:00:00+00:00", "hdfs_serving_source": "hdfs://live"}
+        records = [
+            {**self.records[2], "score": 5, "month": "2026-09", "at": "2026-09-15 12:00:00", "content": "Đã sửa ứng dụng"},
+            {**self.records[0], "review_key": "r6", "month": "2026-10", "at": "2026-10-15 12:00:00"},
+            {**self.records[4], "review_key": "r7", "score": 2, "month": "2026-10", "at": "2026-10-14 12:00:00"},
+        ]
+        build(iter(records), live_root / "review_search.sqlite", meta)
+        (live_root / "dashboard_preparation.json").write_text(json.dumps(meta))
+        columns = ["generation", "platform", "month", "score", "spam_candidate", "reviews", "unmatched_reviews"] + ["aspect_" + a["code"] for a in self.aspects]
+        with (live_root / "dashboard_cube.csv").open("w", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=columns);writer.writeheader()
+            for r in records:
+                row = {"generation": meta["generation"], "platform": r["platform"], "month": r["month"], "score": r["score"],
+                       "spam_candidate": r["spam_candidate"], "reviews": 1, "unmatched_reviews": int(not r["aspects_mentioned"])}
+                row.update({"aspect_" + a["code"]: int(a["code"] in r["aspects_mentioned"]) for a in self.aspects})
+                writer.writerow(row)
+        return CombinedStore(self.store, Store(live_root))
+
+    def test_combined_source_supersedes_old_review_and_matches_cube(self):
+        store = self.combined_fixture()
+        metadata, _ = store.snapshot()
+        self.assertEqual(metadata["processed_rows"], 7)
+        self.assertEqual(metadata["overlapping_review_ids"], 1)
+        self.assertEqual((metadata["month_min"], metadata["month_max"]), ("2022-01", "2026-10"))
+        self.assertEqual(store.overview({})["stats"]["reviews"], 7)
+        self.assertEqual(store.overview({})["stats"]["low"], 4)
+        self.assertEqual(store.reviews({"score": ["all"]})["total"], 7)
+        self.assertEqual(store.reviews({"q": ["dang nhap"], "score": ["all"]})["total"], 0)
+        result = store.reviews({"q": ["da sua"], "score": ["all"]})
+        self.assertEqual(result["total"], 1)
+        self.assertEqual(result["rows"][0]["review_key"], "r3")
+        # A filter excluding the new version must not bring its old version back.
+        old = {"from": ["2022-01"], "to": ["2022-02"], "score": ["all"]}
+        self.assertEqual(store.overview(old)["stats"]["reviews"], 4)
+        self.assertEqual(store.reviews(old)["total"], 4)
+        self.assertEqual(store.reviews({"q": ["giao hang"], "score": ["all"]})["total"], 2)
+        pages = [store.reviews({"score": ["all"], "limit": ["2"], "offset": [str(i)]}) for i in range(0, 7, 2)]
+        keys = [r["review_key"] for page in pages for r in page["rows"]]
+        self.assertEqual(len(set(keys)), 7)
+        self.assertEqual(keys[:3], ["r6", "r7", "r3"])
+
+    def test_combined_source_works_before_first_live_snapshot(self):
+        store = self.combined_fixture()
+        historical_only = CombinedStore(self.store)
+        self.assertEqual(historical_only.overview({})["stats"]["reviews"], 5)
+        self.assertEqual(historical_only.reviews({"score": ["all"]})["total"], 5)
 
     def test_filters_recalculate_denominators_and_match_lookup(self):
         result = self.store.overview({"exclude_spam": ["1"]})

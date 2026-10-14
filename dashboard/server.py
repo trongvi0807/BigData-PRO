@@ -162,6 +162,9 @@ class Store:
             "aspects": [{**aspect, "mentions": sum(p["aspects"][aspect["code"]] for p in platforms),
                 "denominator": low} for aspect in metadata["aspects"]]}
 
+    def review_sources(self):
+        return [("main", None)]
+
     def reviews(self, params, export=False):
         metadata, _ = self.snapshot()
         filters = self.filters(params, metadata)
@@ -196,19 +199,30 @@ class Store:
             values.append(query)
         # Keep the selective text index first; otherwise SQLite may probe FTS for
         # every review selected by a broad platform/month filter.
-        base = "review_fts CROSS JOIN reviews r ON r.id=review_fts.rowid" if query else "reviews r"
         where = " WHERE " + " AND ".join(conditions)
         with closing(self.connect()) as connection:
-            total = connection.execute("SELECT COUNT(*) FROM " + base + where, values).fetchone()[0]
-            row_base, row_where, row_values = base, where, list(values)
-            if not query:
-                year, month = map(int, filters["to"].split("-"))
-                next_month = date(year + int(month == 12), 1 if month == 12 else month + 1, 1).isoformat()
-                row_base = "reviews r INDEXED BY review_date"
-                row_where += " AND r.at>=? AND r.at<?"
-                row_values += [filters["from"] + "-01", next_month]
-            records = connection.execute("SELECT r.review_key,r.platform,r.month,r.at,r.score,r.content,r.spam,r.aspect_mask FROM "
-                + row_base + row_where + " ORDER BY r.at DESC,r.id DESC LIMIT ? OFFSET ?", [*row_values, limit, offset]).fetchall()
+            counts, branches, count_values, row_values = [], [], [], []
+            for schema, superseded_by in self.review_sources():
+                base = (f"{schema}.review_fts CROSS JOIN {schema}.reviews r ON r.id=review_fts.rowid"
+                        if query else f"{schema}.reviews r")
+                source_where = where
+                if superseded_by:
+                    source_where += f" AND NOT EXISTS (SELECT 1 FROM {superseded_by}.reviews newer WHERE newer.review_key=r.review_key)"
+                counts.append("SELECT COUNT(*) AS n FROM " + base + source_where)
+                count_values.extend(values)
+                row_base, row_where, branch_values = base, source_where, list(values)
+                if not query:
+                    year, month = map(int, filters["to"].split("-"))
+                    next_month = date(year + int(month == 12), 1 if month == 12 else month + 1, 1).isoformat()
+                    row_base = f"{schema}.reviews r INDEXED BY review_date"
+                    row_where += " AND r.at>=? AND r.at<?"
+                    branch_values += [filters["from"] + "-01", next_month]
+                branches.append("SELECT r.id,r.review_key,r.platform,r.month,r.at,r.score,r.content,r.spam,r.aspect_mask FROM " + row_base + row_where)
+                row_values.extend(branch_values)
+            total = connection.execute("SELECT SUM(n) FROM (" + " UNION ALL ".join(counts) + ")", count_values).fetchone()[0]
+            records = connection.execute("SELECT review_key,platform,month,at,score,content,spam,aspect_mask FROM ("
+                + " UNION ALL ".join(branches) + ") ORDER BY at DESC,id DESC,review_key DESC LIMIT ? OFFSET ?",
+                [*row_values, limit, offset]).fetchall()
         rows = []
         for record in records:
             row = dict(record)
@@ -229,9 +243,83 @@ class Store:
                 if (self.root / "spark_query_plan.txt").exists() else ""}
 
 
+class CombinedStore(Store):
+    """Federate verified HDFS exports; live versions supersede matching historical IDs."""
+    def __init__(self, historical, live=None):
+        super().__init__(historical.root)
+        self.historical, self.live = historical, live
+        self.overlap = 0
+
+    def connect(self, path=None):
+        connection = self.historical.connect()
+        if self.live:
+            connection.execute("ATTACH DATABASE ? AS live", (self.live.index_path.resolve().as_uri() + "?mode=ro",))
+        return connection
+
+    def review_sources(self):
+        return [("main", "live" if self.overlap else None), ("live", None)] if self.live else [("main", None)]
+
+    def snapshot(self):
+        with self.lock:
+            hm, hc = self.historical.snapshot()
+            lm, lc = self.live.snapshot() if self.live else (None, [])
+            key = hm["generation"] + ":" + (lm["generation"] if lm else "none")
+            if self.key != key:
+                if lm and hm["aspects"] != lm["aspects"]:
+                    raise RuntimeError("Hai nguồn chưa dùng cùng schema khía cạnh.")
+                cube = [dict(row) for row in hc + lc]
+                historical_cells = {}
+                for row in cube[:len(hc)]:
+                    cell = (row["platform"], row["month"], row["score"], row["spam_candidate"])
+                    historical_cells.setdefault(cell, []).append(row)
+                self.overlap = 0
+                if self.live:
+                    with closing(self.connect()) as connection:
+                        # Scan the small live index and probe historical unique keys.
+                        old_rows = connection.execute("SELECT old.* FROM live.reviews newer CROSS JOIN main.reviews old ON old.review_key=newer.review_key").fetchall()
+                    self.overlap = len(old_rows)
+                    for old in old_rows:
+                        cell = (old["platform"], old["month"], old["score"], bool(old["spam"]))
+                        rows = historical_cells.get(cell, [])
+                        row = next((r for r in rows if r["reviews"] > 0), None)
+                        if row is None:
+                            raise RuntimeError("Không đối soát được review trùng trong tổng hợp lịch sử.")
+                        row["reviews"] -= 1
+                        row["unmatched_reviews"] -= int(old["aspect_mask"] == 0)
+                        for aspect in hm["aspects"]:
+                            row["aspect_" + aspect["code"]] -= int(bool(old["aspect_mask"] & aspect["bit"]))
+                cube = [row for row in cube if row["reviews"]]
+                count = hm["processed_rows"] + (lm["processed_rows"] if lm else 0) - self.overlap
+                if sum(row["reviews"] for row in cube) != count:
+                    raise RuntimeError("Tổng dữ liệu gộp không khớp hai chỉ mục nguồn.")
+                self.metadata = {**hm, "generation": key, "source_mode": "historical_and_live",
+                    "processed_rows": count, "indexed_rows": count, "cube_rows": len(cube),
+                    "month_min": min(hm["month_min"], lm["month_min"]) if lm else hm["month_min"],
+                    "month_max": max(hm["month_max"], lm["month_max"]) if lm else hm["month_max"],
+                    "prepared_utc": max(hm["prepared_utc"], lm["prepared_utc"]) if lm else hm["prepared_utc"],
+                    "historical_rows": hm["processed_rows"], "live_rows": lm["processed_rows"] if lm else 0,
+                    "overlapping_review_ids": self.overlap,
+                    "component_generations": {"historical": hm["generation"], "live": lm["generation"] if lm else None},
+                    "hdfs_serving_sources": [hm["hdfs_serving_source"]] + ([lm["hdfs_serving_source"]] if lm else [])}
+                self.key, self.cube = key, cube
+            return self.metadata, self.cube
+
+    def bootstrap(self):
+        data = self.historical.bootstrap()
+        metadata, _ = self.snapshot()
+        qualities = [data["quality"]] + ([self.live.bootstrap()["quality"]] if self.live else [])
+        data.update({"metadata": metadata, "clusters": {}, "quality": {
+            "raw_rows": sum(q["raw_rows"] for q in qualities),
+            "quarantined_rows": sum(q["quarantined_rows"] for q in qualities),
+            "duplicate_valid_id_rows_removed": sum(q["duplicate_valid_id_rows_removed"] for q in qualities) + self.overlap,
+            "clean_rows": metadata["processed_rows"]}})
+        return data
+
+
 def handler_class(store):
     live_root = store.root / 'live'
     live_stores = {}
+    combined_stores = {}
     source_lock = threading.Lock()
 
     def choose_source(params):
@@ -240,12 +328,12 @@ def handler_class(store):
         valid = bool(re.fullmatch(r'[0-9a-f]{32}', generation))
         folder = live_root / 'generations' / generation if valid else None
         ready = bool(folder and (folder / 'dashboard_preparation.json').exists() and (folder / 'review_search.sqlite').exists())
-        source = params.get('source', ['live' if ready else 'historical'])[0]
-        if source not in ['live', 'historical']:
+        source = params.get('source', ['all'])[0]
+        if source not in ['all', 'live', 'historical']:
             raise ValueError('Nguồn dữ liệu không hợp lệ.')
-        if source == 'live':
-            if not ready:
-                raise RuntimeError('Chưa có kết quả thu thập thật đã kiểm chứng. Pipeline đang chuẩn bị dữ liệu.')
+        if source == 'live' and not ready:
+            raise RuntimeError('Chưa có kết quả thu thập thật đã kiểm chứng. Pipeline đang chuẩn bị dữ liệu.')
+        if source in ['all', 'live'] and ready:
             with source_lock:
                 if generation not in live_stores:
                     cache = store.cache / 'live' / generation if store.cache else None
@@ -254,7 +342,14 @@ def handler_class(store):
                 active = live_stores[generation]
         else:
             active = store
-        return source, active, {'historical': {'ready': True}, 'live': {'ready': ready}}
+        if source == 'all':
+            with source_lock:
+                key = generation if ready else 'historical-only'
+                if key not in combined_stores:
+                    combined_stores.clear()
+                    combined_stores[key] = CombinedStore(store, active if ready else None)
+                active = combined_stores[key]
+        return source, active, {'all': {'ready': True}, 'historical': {'ready': True}, 'live': {'ready': ready}}
 
     class Handler(BaseHTTPRequestHandler):
         def respond(self, body, content_type="application/json; charset=utf-8", status=200, download=None):
@@ -301,7 +396,7 @@ def handler_class(store):
                 elif parsed.path == "/api/bootstrap":
                     data = active.bootstrap()
                     data.update({'source': source, 'sources': sources})
-                    if source == 'live':
+                    if source in ['all', 'live']:
                         data['collection'] = read_json(live_root / 'collection_status.json', {})
                         data['evidence'] = read_json(live_root / 'dag_evidence.json', {})
                         data['stream_batches'] = [read_json(p) for p in sorted(live_root.glob('stream_batch_*.json'))]

@@ -20,16 +20,17 @@
     <a href="/demo.html" class="text-button" style="display:block;padding:16px">Demo mô hình →</a><div class="sidebar-bottom">Đồ án Big Data<span>HDFS / Spark / Kafka / Airflow</span></div>
   </aside>
   <main>
-    <header class="topbar"><div class="breadcrumb">Nghiên cứu trải nghiệm <span>/</span> <b id="crumb">Tổng quan</b></div><div class="top-actions"><label class="source-choice">Nguồn <select id="data-source" aria-label="Nguồn dữ liệu"><option value="live">Review mới thu thập</option><option value="historical">Dataset lịch sử</option></select></label><span class="snapshot-pill" id="snapshot-kind">Dữ liệu lịch sử</span><span class="auto-status" id="auto-update" role="status">Tự cập nhật · 10 giây</span></div></header>
+    <header class="topbar"><div class="breadcrumb">Nghiên cứu trải nghiệm <span>/</span> <b id="crumb">Tổng quan</b></div><div class="top-actions"><label class="source-choice">Nguồn <select id="data-source" aria-label="Nguồn dữ liệu"><option value="all">Toàn bộ dữ liệu</option><option value="live">Review mới thu thập</option><option value="historical">Dataset lịch sử</option></select></label><span class="snapshot-pill" id="snapshot-kind">Dữ liệu lịch sử</span><span class="auto-status" id="auto-update" role="status">Tự cập nhật · 10 giây</span></div></header>
     <div class="page-heading"><div><div class="eyebrow">PHẢN HỒI KHÁCH HÀNG / VIỆT NAM</div><h1 id="page-title">Từ phản hồi đến ưu tiên cải thiện.</h1><p id="page-subtitle">Nhìn thấy xu hướng, tìm khía cạnh và đối chiếu bằng phản hồi thực tế.</p></div><div class="heading-actions"><button class="button ghost" id="print">In / Lưu PDF</button><button class="button primary" id="export-summary">↓ Xuất thống kê</button></div></div>
     <form class="filterbar" id="filter-form">
       <fieldset class="platform-filter"><legend>Nền tảng</legend><div id="platform-filters"></div></fieldset>
       <label class="month-label">Từ tháng<input id="from-month" type="month" required></label>
       <label class="month-label">Đến tháng<input id="to-month" type="month" required></label>
       <label class="checkbox-label"><input type="checkbox" id="exclude-spam"> Loại ứng viên spam<small>Cờ theo luật, chưa phải nhãn chuẩn</small></label>
+      <button type="button" class="button ghost" id="clear-filters">Clear bộ lọc</button>
     </form>
     <div class="filter-caption" aria-live="polite"><span id="filter-summary">Đang tải kết quả từ Spark…</span><span id="snapshot-date"></span></div>
-    <p class="filter-help">Chọn bộ lọc để cập nhật tự động. Xóa tháng để dùng lại đầu/cuối kỳ dữ liệu. Từ khóa được tìm sau khi em ngừng gõ.</p><p id="collection-status" class="collection-status hidden" aria-live="polite"></p>
+    <p class="filter-help">Chọn bộ lọc để cập nhật tự động. Clear bộ lọc hoặc xóa tháng để xem toàn bộ dữ liệu lịch sử và review mới. Từ khóa được tìm sau khi em ngừng gõ.</p><p id="collection-status" class="collection-status hidden" aria-live="polite"></p>
     <div id="error" class="error hidden" role="alert"></div><div id="loading" class="loading">Đang đọc snapshot đã kiểm chứng…</div>
     <div id="content" class="hidden">
       <section id="view-overview" class="view active">
