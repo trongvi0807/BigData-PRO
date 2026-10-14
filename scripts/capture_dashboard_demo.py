@@ -22,6 +22,8 @@ def main():
         if len(bootstrap['evidence']['airflow']['tasks'])!=10: raise ValueError('Missing new DAG evidence')
         page.screenshot(path=str(OUT/'screenshots/04-overview-20261015.png'),full_page=True)
         page.locator('[data-view=pipeline]').click()
+        if page.locator('#dag-steps .dag-step').count()!=10: raise ValueError('DAG row count in UI differs from actual tasks')
+        if '10/10' not in page.locator('#dag-badge').inner_text(): raise ValueError('DAG UI denominator differs from actual run')
         page.screenshot(path=str(OUT/'screenshots/06-pipeline-20261015.png'),full_page=True)
         page.goto(evidence['base']+'/demo.html',wait_until='networkidle')
         text='Hàng tốt nhưng giao hàng quá chậm, ứng dụng thường xuyên bị lỗi.'
