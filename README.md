@@ -1,6 +1,8 @@
 # ReviewLens Đồ án Big Data phân tích review TMĐT Việt Nam
 
-Bài toán: tìm các khía cạnh được nhắc trong phản hồi sao thấp của ứng dụng Shopee, Lazada, Sendo, Tiki và dự đoán sao thấp/cao từ văn bản. Nguồn là snapshot Google Play 2013-08/2022, **không phải review sản phẩm, giao dịch hay dữ liệu mới thu thập trực tiếp**.
+**Mới:** bộ lọc/tìm kiếm tự động, đọc snapshot mới mỗi 10 giây; DAG thu thập Google Play thật mỗi 5 phút qua Kafka → HDFS → dashboard. [Hướng dẫn nhánh tự động](docs/LIVE_RUNBOOK.md). Chạy `bash scripts/start_live.sh` để dựng và bật lịch; không cần thao tác producer/consumer hàng ngày. Dataset Kaggle lịch sử vẫn được giữ riêng để đối chiếu.
+
+Bài toán: tìm các khía cạnh được nhắc trong phản hồi sao thấp của ứng dụng Shopee, Lazada, Sendo, Tiki và dự đoán sao thấp/cao từ văn bản. Có hai nguồn: dataset Kaggle Google Play 2013-08/2022 và review Google Play mới thu thập trực tiếp theo lịch. Hai nguồn được lưu/phân tích riêng; đây là review ứng dụng, không phải giao dịch hoặc review sản phẩm đã xác nhận mua hàng.
 
 Phiên hoàn thiện ngày 15/10/2026 dùng WSL Ubuntu và Docker Linux: Hadoop/HDFS 3.3.6, Spark 3.5.7 với hai worker, Kafka 3.9.0, Airflow 2.10.5, dashboard và demo nhập review. Lần chạy mới có log riêng với hậu tố 20261015; artifact lịch sử được giữ ở outputs/history/20261012. Xem [đối chiếu yêu cầu](docs/REQUIREMENTS_AUDIT.md), [kiểm tra phân công](docs/MEMBER_TASK_AUDIT.md), [nhật ký](docs/IMPLEMENTATION_JOURNAL.md).
 

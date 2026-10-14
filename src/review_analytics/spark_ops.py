@@ -43,17 +43,20 @@ def enrich(frame: DataFrame, aspects_file: str = "/workspace/config/aspects.json
     return result
 
 
-def validation_reasons(frame: DataFrame) -> DataFrame:
+def validation_reasons(frame: DataFrame, historical_period: bool = True) -> DataFrame:
     checks = [
         (F.col("_corrupt_record").isNotNull(), "malformed_csv"),
         (F.col("reviewid").isNull() | (F.length(F.trim("reviewid")) == 0), "missing_reviewid"),
         (F.col("normalized_content").isin("", "nan", "null", "none"), "missing_content"),
         (F.col("score").isNull() | ~F.col("score").between(1, 5), "invalid_score"),
         (F.col("at").isNull(), "invalid_date"),
-        (F.col("at").isNotNull() & ((F.col("at") < F.lit("2013-01-01").cast("timestamp"))
-            | (F.col("at") >= F.lit("2022-09-01").cast("timestamp"))), "outside_period"),
         (F.col("platform").isNull(), "unknown_app"),
     ]
+    if historical_period:
+        checks.append((F.col("at").isNotNull() & ((F.col("at") < F.lit("2013-01-01").cast("timestamp"))
+            | (F.col("at") >= F.lit("2022-09-01").cast("timestamp"))), "outside_period"))
+    else:
+        checks.append((F.col("at") > F.current_timestamp() + F.expr("INTERVAL 2 DAYS"), "future_date"))
     return frame.withColumn("validation_reasons", F.filter(
         F.array(*[F.when(condition, F.lit(reason)) for condition, reason in checks]),
         lambda x: x.isNotNull()))

@@ -18,3 +18,7 @@ Kết luận kỹ thuật cần đọc kèm outputs/submission_validation.json s
 | Loại mật khẩu/API key/token | init_local_env.py, .env.example trống, Compose ${...}, .gitignore, allowlist ZIP | .env không tracked và không nằm trong archive; package scanner kiểm tra byte bí mật thực không xuất hiện |
 
 Các PDF/DOCX tiến độ và STATUS cũ chỉ mô tả phiên trước, không phải báo cáo cuối. Điểm chưa thể tự hoàn tất: nhãn người đọc độc lập và xác nhận đóng góp cá nhân. Nhãn AI/nhãn sao không thay thế được hai loại bằng chứng đó. Snapshot này không có ngành hàng và không chứng minh nguyên nhân khách quan của sự không hài lòng.
+
+## Nhánh thu thập mới theo yêu cầu bổ sung
+
+Google Play được lấy trực tiếp, không dùng replay thay nguồn thật. Bốn app đều lấy được 100 review trong lần đầu, raw JSON Kafka được lưu HDFS, processed hiện có 400 unique. DAG live_google_play_reviews chạy định kỳ 5 phút, 4 task; dashboard tự đọc snapshot mới 10 giây và giữ bộ lọc. Nguồn/thời gian/schema/số lượng/dung lượng được đối chiếu qua collection_status/collection_runs, Kafka topic, HDFS logs và metadata generation. Các run thành công tiếp theo giữ 400 unique khi không có review mới/sửa. File hướng dẫn LIVE_RUNBOOK.md và minh chứng live_dashboard_validation.json liên kết với log thực tế. PDF cuối vẫn chưa tạo theo lựa chọn của người dùng.

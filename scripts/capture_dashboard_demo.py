@@ -13,11 +13,11 @@ def main():
         browser=p.chromium.launch()
         page=browser.new_page(viewport={'width':1440,'height':1000},device_scale_factor=1)
         page.on('pageerror',lambda error:errors.append(str(error)))
-        page.goto(evidence['base'],wait_until='networkidle')
+        page.goto(evidence['base']+'/?source=historical',wait_until='networkidle')
         page.wait_for_timeout(1500)
-        overview=page.request.get(evidence['base']+'/api/overview').json()
+        overview=page.request.get(evidence['base']+'/api/overview?source=historical').json()
         if overview['stats']['reviews']!=1299873: raise ValueError('Overview total differs from HDFS')
-        bootstrap=page.request.get(evidence['base']+'/api/bootstrap').json()
+        bootstrap=page.request.get(evidence['base']+'/api/bootstrap?source=historical').json()
         evidence['generation']=bootstrap['metadata']['generation']
         if len(bootstrap['evidence']['airflow']['tasks'])!=10: raise ValueError('Missing new DAG evidence')
         page.screenshot(path=str(OUT/'screenshots/04-overview-20261015.png'),full_page=True)
@@ -36,7 +36,7 @@ def main():
         page.screenshot(path=str(OUT/'screenshots/05-model-demo-20261015.png'),full_page=True)
         invalid=page.request.post(evidence['base']+'/api/predict',data={'review':''})
         if invalid.status!=400: raise ValueError('Blank input not rejected')
-        reviews=page.request.get(evidence['base']+'/api/reviews?q=dang%20nhap&aspect=app').json()
+        reviews=page.request.get(evidence['base']+'/api/reviews?source=historical&q=dang%20nhap&aspect=app').json()
         if reviews['total']<=0: raise ValueError('Unaccented search failed')
         evidence.update({'overview_rows':overview['stats']['reviews'],'prediction':result,'unaccented_search_matches':reviews['total'],
                          'invalid_input_status':invalid.status,'browser_errors':errors,'verification':'passed'})

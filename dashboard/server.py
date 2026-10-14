@@ -230,6 +230,32 @@ class Store:
 
 
 def handler_class(store):
+    live_root = store.root / 'live'
+    live_stores = {}
+    source_lock = threading.Lock()
+
+    def choose_source(params):
+        pointer = read_json(live_root / 'current.json', {})
+        generation = pointer.get('generation', '')
+        valid = bool(re.fullmatch(r'[0-9a-f]{32}', generation))
+        folder = live_root / 'generations' / generation if valid else None
+        ready = bool(folder and (folder / 'dashboard_preparation.json').exists() and (folder / 'review_search.sqlite').exists())
+        source = params.get('source', ['live' if ready else 'historical'])[0]
+        if source not in ['live', 'historical']:
+            raise ValueError('Nguồn dữ liệu không hợp lệ.')
+        if source == 'live':
+            if not ready:
+                raise RuntimeError('Chưa có kết quả thu thập thật đã kiểm chứng. Pipeline đang chuẩn bị dữ liệu.')
+            with source_lock:
+                if generation not in live_stores:
+                    cache = store.cache / 'live' / generation if store.cache else None
+                    live_stores.clear()
+                    live_stores[generation] = Store(folder, cache)
+                active = live_stores[generation]
+        else:
+            active = store
+        return source, active, {'historical': {'ready': True}, 'live': {'ready': ready}}
+
     class Handler(BaseHTTPRequestHandler):
         def respond(self, body, content_type="application/json; charset=utf-8", status=200, download=None):
             self.send_response(status)
@@ -268,26 +294,32 @@ def handler_class(store):
             parsed = urlsplit(self.path)
             params = parse_qs(parsed.query, keep_blank_values=True)
             try:
+                source, active, sources = choose_source(params)
                 if parsed.path == "/api/health":
-                    store.snapshot()
+                    active.snapshot()
                     data = {"status": "ready"}
                 elif parsed.path == "/api/bootstrap":
-                    data = store.bootstrap()
+                    data = active.bootstrap()
+                    data.update({'source': source, 'sources': sources})
+                    if source == 'live':
+                        data['collection'] = read_json(live_root / 'collection_status.json', {})
+                        data['evidence'] = read_json(live_root / 'dag_evidence.json', {})
+                        data['stream_batches'] = [read_json(p) for p in sorted(live_root.glob('stream_batch_*.json'))]
                 elif parsed.path == "/api/overview":
-                    data = store.overview(params)
+                    data = active.overview(params)
                 elif parsed.path == "/api/reviews":
-                    data = store.reviews(params)
+                    data = active.reviews(params)
                 elif parsed.path in ["/api/export.csv", "/api/export-reviews.csv"]:
                     stream = io.StringIO(newline="")
                     writer = csv.writer(stream)
                     if parsed.path == "/api/export.csv":
-                        data = store.overview(params)
+                        data = active.overview(params)
                         writer.writerow(["platform", "from_month", "to_month", "reviews", "low_rating_reviews", "low_rating_rate", "mean_rating"])
                         for p in data["platforms"]:
                             writer.writerow([p["platform"], data["filters"]["from"], data["filters"]["to"],
                                 p["reviews"], p["low"], p["rate"], p["mean"]])
                     else:
-                        data = store.reviews(params, export=True)
+                        data = active.reviews(params, export=True)
                         writer.writerow(["review_key", "platform", "at", "score", "aspects_mentioned", "spam_candidate", "content"])
                         for row in data["rows"]:
                             writer.writerow([row["review_key"], row["platform"], row["at"], row["score"],

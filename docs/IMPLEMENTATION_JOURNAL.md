@@ -14,3 +14,9 @@ Mốc bên dưới thuộc phiên kiểm tra ngày 15/10/2026 theo Asia/Ho_Chi_M
 | Hồ sơ nộp | Người dùng chọn chỉ hoàn thiện mã nguồn/kiểm chứng; chưa tạo PDF cuối, bảng đối chiếu yêu cầu/phân công, lịch sử Git mới, ZIP/manifest không có secrets | Không có lịch sử cá nhân cũ để phục dựng; không gán commit tự động cho thành viên |
 
 Kết quả chốt từng bước phải đọc ở outputs/demo_evidence.json, outputs/submission_validation.json và log tương ứng, không lấy dòng kế hoạch làm bằng chứng đã chạy. Các artifact ngày 12/10 được giữ ở outputs/history/20261012; kết quả nộp mới dùng lần chạy 15/10.
+
+## Bổ sung theo yêu cầu review mới thật ngày 15/10/2026
+
+Bỏ nút Áp dụng/Tìm phản hồi/refresh, tự cập nhật bộ lọc/từ khóa/snapshot. Kiểm thử browser trên số đếm thật, giữ lựa chọn và kiểm tra response đến sai thứ tự. Đã kiểm tra nguồn Google Play thật của cả bốn app, mẫu có ngày nguồn trong tháng 10/2026. Bổ sung collector, version fingerprint, topic live riêng, raw/processed HDFS, publisher nguyên tử và DAG định kỳ 5 phút. Dataset lịch sử không bị thay bằng dữ liệu giả; không tạo PDF mới theo lựa chọn trước của người dùng. Kết quả kiểm chứng cuối nằm ở auto_filters_validation.json, live_dashboard_validation.json và log DAG.
+
+- 15/10/2026: Sửa lỗi xóa trống tháng làm giao diện giữ kết quả cũ. Tháng bắt đầu/kết thúc trống được khôi phục theo biên dữ liệu nguồn và tự truy vấn lại; kiểm chứng browser đối chiếu số đếm API thật.

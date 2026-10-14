@@ -14,11 +14,20 @@ def package():
     selected={ROOT/name for name in tracked if name and not name.startswith(('reports/','outputs/','artifacts/','submission/'))}
     current=['data_quality.json','raw_inspection.json','batch_success.json','cluster_metadata.json','demo_evidence.json',
              'persisted_validation.json','dashboard_preparation.json','dashboard_validation.json','sentiment_evaluation.json',
-             'sentiment_model.json','dashboard_demo_validation.json','submission_validation.json','spark_query_plan.txt',
+             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','submission_validation.json','spark_query_plan.txt',
              'quality_before_airflow.json','platform_summary.csv','monthly_summary.csv','rating_distribution.csv',
              'aspect_mentions.csv','unmatched_low_ratings.csv','spam_sensitivity.csv','review_length_summary.csv','dashboard_cube.csv']
     selected.update(ROOT/'outputs'/name for name in current)
     selected.update((ROOT/'outputs').glob('stream_batch_*.json'))
+    live=ROOT/'outputs/live'
+    if (live/'current.json').exists():
+        selected.update(live/name for name in ['current.json','collection_status.json','dag_evidence.json'])
+        selected.update(live.glob('stream_batch_*.json'))
+        selected.update((live/'collection_runs').glob('*.json'))
+        generation=json.loads((live/'current.json').read_text())['generation']
+        snapshot=live/'generations'/generation
+        selected.update(snapshot/name for name in ['dashboard_preparation.json','dashboard_cube.csv','data_quality.json','persisted_validation.json','dashboard_validation.json'])
+    selected.update((ROOT/'outputs/logs/live_airflow_tasks').rglob('*.log'))
     selected.add(ROOT/'artifacts/audit/dataset_profile.json')
     selected.update((ROOT/'outputs/logs').glob('*20261015.*'))
     selected.update((ROOT/'outputs/logs/airflow_tasks').rglob('*.log'))
@@ -42,7 +51,7 @@ def package():
         content=file.read_bytes()
         if any(secret in content for secret in secrets): raise ValueError(f'Credential leak found in {relative}; refusing package')
         entries.append({'path':relative,'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()})
-    manifest={'prepared_utc':datetime.now(timezone.utc).isoformat(),'evidence_run_id':'validation_20261015',
+    manifest={'prepared_utc':datetime.now(timezone.utc).isoformat(),'evidence_run_id':'validation_20261015','live_evidence':'outputs/live/dag_evidence.json',
               'scope':'Source and technical verification only; no final PDF created at user request',
               'credential_scan':'local .env values absent from every packaged file including Git bundle','entries':entries}
     (ROOT/'MANIFEST_SHA256.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))

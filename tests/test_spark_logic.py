@@ -59,6 +59,28 @@ class SparkLogicTests(unittest.TestCase):
         self.assertIn("delivery", latest["aspects_mentioned"])
         self.assertIn("không", latest["normalized_content"])
 
+    def test_current_reviews_require_explicit_live_validation(self):
+        from pyspark.sql import functions as F
+        from review_analytics.spark_ops import enrich, validation_reasons
+        records = [("current-id", "com.shopee.vn", "Ứng dụng bị lỗi đăng nhập", "1", "2026-10-13 17:51:29")]
+        frame = self.spark.createDataFrame(records, ["reviewid", "appid", "content", "score", "at"]).withColumn("_corrupt_record", F.lit(None).cast("string"))
+        prepared = enrich(frame, self.aspects_file)
+        historical = validation_reasons(prepared).first()
+        live = validation_reasons(prepared, historical_period=False).first()
+        self.assertIn("outside_period", historical["validation_reasons"])
+        self.assertEqual(live["validation_reasons"], [])
+
+    def test_edited_review_replaces_previous_score_without_increasing_count(self):
+        from jobs.publish_live_dashboard import latest_review_versions
+        versions = self.spark.createDataFrame([
+            ("key-a", "version-a1", "2026-10-15T00:00:00+00:00", 1),
+            ("key-a", "version-a2", "2026-10-15T00:05:00+00:00", 5),
+            ("key-b", "version-b1", "2026-10-15T00:00:00+00:00", 2),
+        ], ["review_key", "event_id", "ingested_at", "score"])
+        latest = latest_review_versions(versions).collect()
+        self.assertEqual(len(latest), 2)
+        self.assertEqual(next(row.score for row in latest if row.review_key == "key-a"), 5)
+
 
 if __name__ == "__main__":
     unittest.main()

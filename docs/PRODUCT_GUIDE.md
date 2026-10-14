@@ -11,7 +11,7 @@ Mở **http://localhost:8090**. Sản phẩm giúp người phụ trách trải 
 | Tổng quan | Lượng review, tỷ lệ 1–2 sao, trung bình sao, độ bao phủ; xu hướng theo năm/tháng; tỷ lệ từng sàn; phân bố năm mức sao | Nhận biết giai đoạn và chủ đề cần rà soát; đọc tỷ lệ cùng mẫu số |
 | Khía cạnh | Ma trận 7 khía cạnh × sàn, bấm một ô mở phản hồi; có phần chưa gán; 8 cụm K-Means | Khoanh vùng và kiểm tra các giả thuyết nội dung |
 | Tra cứu phản hồi | Từ khóa có/không dấu, sàn, số sao, khía cạnh, phân trang 20 review; xuất tối đa 5.000 dòng | Đối chiếu biểu đồ với văn bản thật trên toàn dataset đã làm sạch |
-| Luồng dữ liệu | Raw/quarantine/dedup/clean; 9 task Airflow; offset Kafka và unique trên HDFS; microbatch; kế hoạch Spark SQL | Chứng minh nguồn gốc và quá trình xử lý của số liệu |
+| Luồng dữ liệu | Raw/quarantine/dedup/clean; 10 task Airflow lịch sử hoặc 4 task thu thập thật; offset Kafka và unique trên HDFS; microbatch; kế hoạch Spark SQL | Chứng minh nguồn gốc và quá trình xử lý của số liệu |
 
 Bộ lọc sàn/tháng/ứng viên spam thay đổi mẫu số của toàn bộ biểu đồ thống kê. Bộ lọc riêng ở phần tra cứu áp dụng cho danh sách review. Phần K-Means hiện dùng mô hình trên mẫu hash 25% toàn snapshot đủ điều kiện, được ghi rõ và không tính lại theo bộ lọc giao diện. Màn hình pipeline hiển thị bằng chứng đã lưu của toàn lần chạy, không phải trạng thái trực tiếp của dịch vụ.
 
@@ -21,8 +21,8 @@ Tìm kiếm nhiều từ yêu cầu tất cả các từ xuất hiện trong rev
 
 1. Mở Tổng quan: chỉ ra 1.299.873 review đã làm sạch, 282.772 review 1–2 sao (21,75%), trung bình 3,98 sao. Giải thích đây là tập Google Play lịch sử.
 2. So sánh bốn sàn: Shopee 27,55%; Lazada 18,65%; Sendo 14,08%; Tiki 21,98%. Đọc số review đi kèm để tránh so sánh số tuyệt đối giữa tập khác quy mô.
-3. Chỉ giữ Shopee, đặt Từ tháng `2021-01`, Đến tháng `2022-08`, bấm Áp dụng. Kết quả kiểm chứng: 260.800 review, 81.979 sao thấp, tỷ lệ 31,43%. Chuyển theo năm/tháng hoặc số review để thấy quy mô quan sát.
-4. Mở Khía cạnh, bấm ô Ứng dụng của Shopee để mở review. Nhập `dang nhap`, bấm Tìm phản hồi. Đọc vài phản hồi và nhận xét điều gì được chứng minh, điều gì chỉ là giả thuyết. Đổi bộ lọc để so sánh với Vận chuyển.
+3. Chỉ giữ Shopee, đặt Từ tháng `2021-01`, Đến tháng `2022-08`, kết quả tự cập nhật. Kết quả kiểm chứng: 260.800 review, 81.979 sao thấp, tỷ lệ 31,43%. Chuyển theo năm/tháng hoặc số review để thấy quy mô quan sát.
+4. Mở Khía cạnh, bấm ô Ứng dụng của Shopee để mở review. Nhập `dang nhap`, kết quả tự tìm sau khi ngừng gõ. Đọc vài phản hồi và nhận xét điều gì được chứng minh, điều gì chỉ là giả thuyết. Đổi bộ lọc để so sánh với Vận chuyển.
 5. Xuất thống kê CSV hoặc review CSV. Tải biểu đồ SVG để chèn vào slide. Nút In / Lưu PDF dùng chức năng in của trình duyệt đối với trang đang xem.
 6. Mở Luồng dữ liệu: đối soát 1.300.086 = 1.299.873 + 139 + 74. Chỉ ra 2.000 offset sau hai replay nhưng HDFS vẫn có 1.000 review duy nhất; giải thích checkpoint. Mở Airflow/Spark master để minh họa thực thi thực tế.
 7. Kết thúc bằng liên hệ giữa sản phẩm và Big Data: Spark tổng hợp trên executor; dashboard đọc kết quả phục vụ quan sát. Một biểu đồ đẹp tự nó không chứng minh xử lý phân tán.
@@ -55,7 +55,7 @@ Các biểu đồ tĩnh này mặc định dùng toàn bộ sàn/giai đoạn v�
 
 Cube, metadata và chỉ mục phải cùng generation và cùng số dòng. Snapshot thiếu/đang thay đổi trả thông báo chưa sẵn sàng; không trộn kết quả giữa hai lần chạy. Docker giữ một bản cache chỉ mục trong volume Linux để tránh chi phí đọc ngẫu nhiên qua ổ Windows; cache tự làm mới khi generation thay đổi. Lần mở đầu sau cập nhật có thể chờ sao chép chỉ mục khoảng 400 MB, những lần tìm tiếp theo dùng cache. Tên và avatar người viết không đưa vào chỉ mục.
 
-Airflow task 07 đã được mở rộng để tạo cube và chỉ mục trước task Kafka. Chạy task 07 qua Airflow CLI được kiểm tra riêng; pipeline 9/9 task trước đó và bước phục vụ mới đều có log.
+Airflow task 07 đã được mở rộng để tạo cube và chỉ mục trước task Kafka. Chạy task 07 qua Airflow CLI được kiểm tra riêng; pipeline lịch sử 10/10 task và bước phục vụ mới đều có log.
 
 Task 09 đối soát cả Parquet thật trên HDFS và 1.910 ô cube × 9 số đếm với GROUP BY độc lập trên chỉ mục. Phép audit toàn bộ chỉ mục dùng quét bảng tuần tự để tránh đọc ngẫu nhiên trên Docker bind mount Windows; việc tìm kiếm tương tác vẫn dùng chỉ mục và cache. `outputs/dashboard_validation.json` và `dashboard_acceptance.json` lưu kết quả kiểm chứng.
 
@@ -65,4 +65,6 @@ Dữ liệu dừng ở 08/2022, nên sản phẩm hiện minh họa phân tích 
 
 Sao 1–2 là tín hiệu thay thế cho không hài lòng. Khía cạnh được nhắc chưa xác nhận bị chê, một review có thể vừa khen vừa chê nhiều khía cạnh. Luật hiện phủ khoảng 44,05% review sao thấp; phần còn lại công khai là chưa gán. Silhouette K-Means khoảng 0,019 thể hiện phân tách yếu, không phải accuracy. Cần gán nhãn mẫu độc lập trước khi tuyên bố chất lượng nhận diện hoặc đưa ra khuyến nghị vận hành chắc chắn.
 
-Để dùng với nguồn mới: lưu snapshot raw mới, xác thực schema và phạm vi thời gian, chạy lại pipeline rồi công bố snapshot phục vụ. Việc thu thập dữ liệu mới và tích hợp hệ thống của sàn chưa thuộc bản demo này.
+Để dùng với nguồn mới: lưu snapshot raw mới, xác thực schema và phạm vi thời gian, chạy lại pipeline rồi công bố snapshot phục vụ. Nhánh Google Play mới đã có ở LIVE_RUNBOOK.md; tích hợp hệ thống nội bộ của sàn chưa có.
+
+Giao diện tự kiểm tra snapshot mới mỗi 10 giây và giữ bộ lọc. Nguồn Review mới thu thập dùng DAG bốn bước theo lịch 5 phút; phần K-Means lịch sử không được gán thành kết quả huấn luyện trên review mới.
