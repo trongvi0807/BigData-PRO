@@ -1,0 +1,9 @@
+# Trạng thái phiên hoàn thiện ngày 15/10/2026
+
+Đây là phiên cài lại trong WSL Ubuntu hiện tại; xem README và REQUIREMENTS_AUDIT để tái hiện. Các bằng chứng ngày 12/10 giữ trong outputs/history/20261012, không dùng để giả nhận cluster hiện tại đã chạy.
+
+Đã cài Docker và build Hadoop/HDFS 3.3.6, Java 11, Spark 3.5.7, Kafka 3.9.0, Airflow 2.10.5. Hai Spark worker, mỗi worker 1 core/1 GiB theo compose.low-memory.yaml. Dataset Kaggle đã tải và checksum khớp, upload HDFS; 13 tests container đều đạt. Batch có 1.299.873 processed, 74 quarantine, 139 duplicates.
+
+Đã bổ sung supervised baseline LR/SVM, split nội dung 70/10/20, feature chỉ fit train, test riêng, kiểm tra portable inference khớp Spark. Nhãn là sao thay thế, không nhãn người đọc. Dashboard/index được tái tạo toàn tập; Kafka đã lưu 1.000 review unique từ replay lịch sử. DAG mới 10 task gồm mô hình và đối soát dashboard; kết quả cuối xem outputs/demo_evidence.json và outputs/submission_validation.json.
+
+Báo cáo nộp mới: reports/Bao_cao_Bigdata_hoan_thien.pdf. Không dùng PDF tiến độ ngày 14/10 làm báo cáo cuối. Nhật ký và kiểm tra phân công ở IMPLEMENTATION_JOURNAL.md và MEMBER_TASK_AUDIT.md. Chưa có lịch sử Git/nhật ký cá nhân cũ để xác nhận đóng góp từng thành viên. Không tạo tác giả/commit hồi tố.

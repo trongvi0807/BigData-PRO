@@ -1,0 +1,28 @@
+﻿PHÂN CÔNG CÔNG VIỆC ĐỀ TÀI BIG DATA
+Đề tài: Phát hiện các khía cạnh gây không hài lòng của khách hàng từ dữ liệu phản hồi trên các sàn thương mại điện tử tại Việt Nam
+
+| Tuần | Thành viên | Công việc |
+|---|---|---|
+| Tuần 1 – Nghiên cứu và xác định bài toán | 
+- Thành viên 1 : Tìm hiểu các nghiên cứu liên quan; đề xuất các khía cạnh có thể gây không hài lòng như chất lượng sản phẩm, giao hàng, đóng gói, giá, dịch vụ hỗ trợ, hiệu năng ứng dụng, thanh toán, khuyến mãi. 
+- Thành viên 2 : Xác định nguồn dữ liệu phản hồi khách hàng; tìm hiểu dataset Vietnamese E-commerce Review; xác định các trường dữ liệu cần sử dụng như nội dung đánh giá, số sao, thời gian, nền tảng/ngành hàng. 
+- Thành viên 3 : Tìm hiểu các phương pháp tiền xử lý tiếng Việt; nghiên cứu các phương pháp phân loại cảm xúc và mô hình có thể áp dụng như TF-IDF, Logistic Regression, SVM, PhoBERT.
+| Tuần 2 – Cài đặt môi trường Big Data | 
+- Thành viên 1 : Tìm hiểu kiến trúc Hadoop/HDFS, vai trò của NameNode, DataNode, block và replication; tổng hợp tài liệu và mô tả kiến trúc hệ thống cho báo cáo. 
+- Thành viên 2 : Cài đặt và cấu hình Hadoop/HDFS; khởi tạo HDFS; tạo cấu trúc thư mục dự án; đưa dataset gốc lên HDFS và kiểm tra khả năng lưu trữ/truy xuất dữ liệu. 
+- Thành viên 3 : Cài đặt Java, Python, Apache Spark/PySpark và môi trường lập trình; cấu hình Spark kết nối HDFS; kiểm thử đọc dataset từ HDFS bằng Spark DataFrame. 
+| Tuần 3 – Khám phá và tiền xử lý dữ liệu |
+- Thành viên 1 : Khảo sát nội dung review thực tế; xác định và chuẩn hóa danh sách các khía cạnh; xây dựng quy tắc/guideline phục vụ gán nhãn Aspect và Sentiment. 
+- Thành viên 2 : Thực hiện EDA bằng PySpark: số lượng dữ liệu, missing, duplicate, phân bố số sao, nền tảng, thời gian, độ dài review; lưu kết quả xử lý trên HDFS. 
+- Thành viên 3 : Xây dựng pipeline tiền xử lý tiếng Việt: chuẩn hóa Unicode, chữ thường, URL, emoji, ký tự đặc biệt, từ viết tắt/teen code, tokenization; tạo dữ liệu sạch cho mô hình. 
+| Tuần 4 – Xây dựng và đánh giá mô hình | 
+- Thành viên 1 : Thực hiện/hỗ trợ gán nhãn dữ liệu Aspect và Sentiment; kiểm tra chất lượng nhãn; phân tích các trường hợp review chứa nhiều khía cạnh và các trường hợp mô hình dự đoán sai. 
+- Thành viên 2 : Chuẩn bị tập train/validation/test; xây dựng pipeline xử lý dữ liệu từ HDFS bằng Spark; thực hiện các bước feature engineering và quản lý dữ liệu đầu vào/đầu ra của mô hình. 
+- Thành viên 3 : Huấn luyện và so sánh các mô hình như TF-IDF + Logistic Regression, TF-IDF + SVM và PhoBERT nếu đủ tài nguyên; đánh giá bằng Accuracy, Precision, Recall, F1-score và Confusion Matrix. 
+| Tuần 5 – Phân tích kết quả và hoàn thiện sản phẩm |
+- Thành viên 1 : Phân tích các khía cạnh gây không hài lòng; so sánh giữa Shopee, Lazada, Sendo và Tiki; phân tích theo thời gian, số sao và tỷ lệ phản hồi tiêu cực; viết phần kết quả và kết luận. 
+- Thành viên 2 : Chạy pipeline trên toàn bộ dataset bằng HDFS/Spark; tổng hợp kết quả; xây dựng các biểu đồ/dashboard thể hiện sentiment, aspect, nền tảng và xu hướng theo thời gian. 
+- Thành viên 3 : Hoàn thiện mô hình; xây dựng demo nhập một review và trả về khía cạnh + cảm xúc; tổng hợp kết quả đánh giá mô hình; hỗ trợ hoàn thiện source code, slide và demo sản phẩm. 
+
+Kết quả cuối sau 5 tuần:
+HDFS chứa dữ liệu gốc và dữ liệu xử lý → pipeline PySpark → mô hình phát hiện Aspect + Sentiment → phân tích các nguyên nhân gây không hài lòng → dashboard/biểu đồ → demo → báo cáo và slide thuyết trình.
