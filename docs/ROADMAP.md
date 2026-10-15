@@ -69,7 +69,7 @@ RFM cần Recency/Frequency/Monetary của giao dịch hoặc khách hàng đị
 
 ### Chặng 6 — sản phẩm và bàn giao
 
-Đã triển khai ReviewLens tại http://localhost:8090, có biểu đồ/bộ lọc, tra cứu toàn dataset đã làm sạch, xuất CSV/SVG và bộ hình PNG/SVG cho báo cáo. Kịch bản demo cùng giới hạn ứng dụng ở `PRODUCT_GUIDE.md`. Báo cáo Word theo mẫu khoa đã hoàn thành trong `reports/`; push repo chờ địa chỉ do người dùng cung cấp. Đánh giá nhãn người đọc vẫn cần hoàn thiện.
+Đã triển khai ReviewLens tại http://localhost:8090 với bộ lọc, tra cứu và xuất CSV/SVG. Kịch bản demo cùng giới hạn ở PRODUCT_GUIDE.md. Báo cáo PDF hiện tại nằm trong output/pdf; bản Word cũ đã được loại khỏi bộ làm việc.
 
 - Giao diện nhỏ để xem bảng/biểu đồ, lọc sàn/thời gian/khía cạnh và phản hồi bằng chứng. Làm sau pipeline.
 - Hoàn thiện hướng dẫn cài/chạy, kiến trúc, hạn chế, kết quả và kịch bản bảo vệ.

@@ -32,3 +32,7 @@ Bỏ nút Áp dụng/Tìm phản hồi/refresh, tự cập nhật bộ lọc/t�
 ## 15/10/2026 - Báo cáo cuối và kiến thức bảo vệ
 
 Người dùng yêu cầu mới tạo PDF đầy đủ, mã PySpark kèm giải thích và kiến thức HDFS/Kafka/Airflow; yêu cầu này thay lựa chọn trước chỉ hoàn thiện mã nguồn. scripts/build_final_report.py dựng nội dung từ source, artifact và snapshot có generation; giữ rõ lịch sử/review thật/replay. Thêm câu hỏi bảo vệ, lệnh chạy và phụ lục source. scripts/validate_final_report.py kiểm hash, text, geometry, số liệu và secret; render riêng để rà soát bố cục. Không thay đổi pipeline hay tạo log chạy giả. Thông tin hành chính được người dùng xác nhận chưa cung cấp; đóng góp cá nhân vẫn chưa kiểm chứng.
+
+## 15/10/2026 - Dọn và đóng gói dưới 20 MB
+
+Sau lần dọn 455 ảnh render/cache (85,98 MiB), người dùng yêu cầu xóa phần thừa và tạo ZIP nhỏ hơn 20 MB. Xóa thêm 6 file (6.040.615 byte, 5,76 MiB): Word, ghi chú/phân công CSV cũ và snapshot kiểm tra dọn tạm. Giữ PDF mẫu tại docs/templates/01_Bao_cao_tien_do.pdf và kế hoạch JSON tại docs/PHAN_CONG_5_TUAN.json. Giữ dữ liệu CSV, SQLite, .env, báo cáo mới, ảnh/log và Docker volumes để demo. Trình đóng gói bổ sung PDF tiến độ, đọc kiểm tra bí mật trong mọi PDF, cố định pointer live đã chọn, kiểm ZIP/hash và chặn file từ 20.000.000 byte trở lên. Kết quả ở outputs/package_validation.json.

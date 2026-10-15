@@ -105,3 +105,11 @@ Bấm `Clear bộ lọc` hoặc xóa trống một ô tháng sẽ trở về to�
 Minh chứng: `outputs/clear_filters_validation.json`, `outputs/combined_source_validation.json`, `outputs/logs/clear_filters_browser_20261015.log` và `outputs/screenshots/11-clear-all-data-20261015.png`. Kiểm chứng độc lập: `python3 scripts/verify_combined_source.py`.
 
 - Đã thêm màn hình **Đồ thị nạp dần**: bốn nền tảng mặc định, cửa sổ trượt 12 tháng, chuyển động theo lô HDFS thực tế, tạm dừng/tiếp tục/nạp lại riêng demo và chuyển sang đồ thị mốc thu thập thật. Hướng dẫn: [REPLAY_RUNBOOK](docs/REPLAY_RUNBOOK.md). Truy cập `http://localhost:8090/?source=all#replay`.
+
+## ZIP nộp dưới 20 MB
+
+Chạy `python3 scripts/check_submission.py` rồi `python3 scripts/package_submission.py`. File để nộp: `submission/Source_va_minh_chung_Bigdata.zip`. Bộ đóng gói kiểm hash, bí mật, tính toàn vẹn ZIP và giới hạn **20.000.000 byte** trước khi thay ZIP cũ.
+
+Gói có source, cấu hình, test, hướng dẫn, báo cáo tổng hợp, báo cáo tiến độ mới, ảnh minh chứng, log, kết quả và lịch sử Git. Không nén nguyên thư mục dự án: CSV gốc và SQLite vẫn cần ở máy demo nhưng không được đưa vào ZIP; Docker volumes cũng nằm ngoài gói. Máy mới tải dataset và dựng lại đầu ra theo README.
+
+Báo cáo hiện tại ở `output/pdf/`; kết quả pipeline ở `outputs/`. PDF mẫu dựng báo cáo tiến độ ở `docs/templates/01_Bao_cao_tien_do.pdf`; kế hoạch cũ được giữ ở `docs/PHAN_CONG_5_TUAN.json`, không dùng thay bằng chứng đóng góp cá nhân. Bản Word, ghi chú nộp cũ và ảnh render tạm đã được dọn.

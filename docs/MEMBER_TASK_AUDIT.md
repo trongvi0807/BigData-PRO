@@ -1,6 +1,6 @@
 # Đối chiếu công việc với file phân công gốc
 
-Nguồn ưu tiên là docs/PHAN_CONG_GOC.txt, bản sao nguyên văn file người dùng gửi. Phan_cong_5_tuan.json có kế hoạch chia việc khác; giữ làm tài liệu lịch sử, không thay thế phân công gốc khi nghiệm thu. TV1/TV2/TV3 bên dưới là ký hiệu trong file gốc, chưa có xác nhận ánh xạ ký hiệu với tên người. Danh sách nhóm trong hồ sơ: Huỳnh Quang Sang, Phan Đức Thể, Đỗ Trọng Vĩ.
+Nguồn ưu tiên là docs/PHAN_CONG_GOC.txt, bản sao nguyên văn file người dùng gửi. docs/PHAN_CONG_5_TUAN.json có kế hoạch chia việc khác; giữ làm tài liệu lịch sử, không thay thế phân công gốc khi nghiệm thu. TV1/TV2/TV3 bên dưới là ký hiệu trong file gốc, chưa có xác nhận ánh xạ ký hiệu với tên người. Danh sách nhóm trong hồ sơ: Huỳnh Quang Sang, Phan Đức Thể, Đỗ Trọng Vĩ.
 
 | Tuần | TV | Công việc và bằng chứng đối chiếu | Kết luận về sản phẩm |
 |---|---|---|---|

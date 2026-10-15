@@ -22,3 +22,4 @@ tmp/
 
 # Rebuilt final PDF is packaged with its evidence manifest.
 output/
+MANIFEST_SHA256.json
