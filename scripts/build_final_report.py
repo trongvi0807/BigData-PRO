@@ -101,17 +101,17 @@ def figure(path,caption,height=330):
  scale=min(CW/iw,height/ih);image=Image(str(ROOT/path),width=iw*scale,height=ih*scale)
  story.append(KeepTogether([image,Spacer(1,7),Paragraph(caption,styles['small'])]))
 def architecture():
- d=Drawing(CW,190)
+ d=Drawing(CW,180)
  def box(x,y,label):
   d.add(Rect(x,y,112,44,rx=5,ry=5,fillColor=LIGHT,strokeColor=TEAL,strokeWidth=.7))
   for i,line in enumerate(label.split('|')):d.add(String(x+56,y+28-i*13,line,fontName='Body',fontSize=8.5,textAnchor='middle',fillColor=INK))
  def arrow(x,y):
   d.add(Line(x,y,x+14,y,strokeColor=GRAY,strokeWidth=1));d.add(Polygon([x+14,y,x+9,y+3,x+9,y-3],fillColor=GRAY,strokeColor=GRAY))
  labels=[['CSV Kaggle|2013 - 08/2022','HDFS raw|CSV + fingerprint','Spark|Clean / SQL / ML','HDFS / API|Parquet / cube'],['Google Play|Thu thập thật','Kafka|3 partition','Spark Streaming|Checkpoint HDFS','HDFS live|Snapshot kiểm tra'],['HDFS prepared|Lô theo tháng','HDFS replay|Copy + commit lô','Snapshot tiến độ|Số đếm thật','Dashboard|Cửa sổ 12 mốc']]
- for row,y in zip(labels,[130,70,10]):
+ for row,y in zip(labels,[120,65,10]):
   for i,label in enumerate(row):box(i*128,y,label)
   for i in range(3):arrow(i*128+113,y+22)
- d.add(String(CW/2,180,'AIRFLOW: LỊCH - DEPENDENCY - RETRY - LOG',fontName='Bold',fontSize=9.3,textAnchor='middle',fillColor=TEAL));story.append(d)
+ d.add(String(CW/2,170,'AIRFLOW: LỊCH - DEPENDENCY - RETRY - LOG',fontName='Bold',fontSize=9.3,textAnchor='middle',fillColor=TEAL));story.append(d)
 class Report(BaseDocTemplate):
  def afterFlowable(self,flowable):
   if isinstance(flowable,Paragraph) and flowable.style.name=='H1':
@@ -163,7 +163,7 @@ p('HDFS lưu dữ liệu; Spark xử lý/huấn luyện; Kafka vận chuyển s�
 table(['Thành phần','Cấu hình','Vai trò'],[['HDFS','3.3.6; 1 NameNode + 1 DataNode; replication=1','Raw, clean, output, models, checkpoint'],['Spark / Java','Spark 3.5.7; Java 11; low-memory: 2 worker × 1 core / 1 GiB','DataFrame, SQL, MLlib, Streaming'],['Kafka','3.9.0; KRaft; 1 broker/controller; 3 partition/topic; replication=1','Topic lịch sử và live riêng'],['Airflow / Postgres','2.10.5; LocalExecutor; PostgreSQL 16.6','Lịch, dependency, retry, metadata, log'],['Dashboard','Python HTTP + JS; cube nhỏ / SQLite','Tìm kiếm toàn tập và đồ thị tự cập nhật'],['Replay runner','Hadoop FileSystem client; run_id riêng','Copy tháng, commit tiến độ, verify cuối']],[103,193,CW-296])
 table(['Vùng HDFS','Nội dung'],[['/ecommerce/raw','CSV gốc và source_sha256.txt'],['/ecommerce/quarantine','Record lỗi và lý do'],['/ecommerce/processed/reviews','Parquet partition platform/year'],['/ecommerce/output và /models','Bảng SQL, cube, predictions và models'],['/ecommerce/checkpoints','Checkpoint Kafka replay lịch sử'],['/ecommerce/live','Event, versions, latest reviews, serving, checkpoint riêng'],['/ecommerce/replay/prepared','Parquet theo tháng đã đối soát'],['/ecommerce/replay/runs/<run_id>/loaded','Lô nạp lại độc lập dữ liệu gốc']],[225,CW-225])
 p('Không collect toàn bộ dữ liệu lớn về driver/trình duyệt. Bước xuất dashboard chỉ collect bảng nhỏ, giới hạn 10.000 dòng. Chỉ mục tìm kiếm đọc tuần tự JSON gzip xuất từ HDFS; API tra cứu toàn tập, không dùng một mẫu chọn trước.')
-cite(['compose.yaml','compose.low-memory.yaml','infra/Dockerfile','jobs/prepare_dashboard.py','scripts/build_dashboard_index.py'])
+cite(['compose.yaml','compose.low-memory.yaml'])
 chapter('4. HDFS: kiến thức, cấu hình và minh chứng')
 h('4.1 Giải thích bằng dự án')
 p('HDFS là hệ thống file phân tán. NameNode quản lý namespace và ánh xạ file-block; DataNode lưu block, phục vụ đọc/ghi. Client hỏi NameNode vị trí block rồi trao đổi dữ liệu với DataNode. File được chia block; replication tạo bản sao để phục hồi khi node hỏng. [T2]')
