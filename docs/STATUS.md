@@ -15,3 +15,5 @@ Báo cáo cuối: báo cáo PDF cuối chưa tạo theo lựa chọn của ngư�
 - 15/10/2026: Nguồn mặc định toàn bộ dữ liệu, Clear tháng/nút Clear phục hồi mọi điều kiện; phạm vi 06/2013–10/2026. Tổng 1.300.267 review = 1.299.873 lịch sử + 400 live − 6 khóa trùng được bản live thay thế. Đối soát độc lập toàn bộ 1.972 ô tổng hợp × 9 chỉ số khớp SQL của hai chỉ mục.
 
 - Đã thêm màn hình **Đồ thị nạp dần**: bốn nền tảng mặc định, cửa sổ trượt 12 tháng, chuyển động theo lô HDFS thực tế, tạm dừng/tiếp tục/nạp lại riêng demo và chuyển sang đồ thị mốc thu thập thật. Hướng dẫn: [REPLAY_RUNBOOK](REPLAY_RUNBOOK.md). Truy cập `http://localhost:8090/?source=all#replay`.
+
+- Quan sát nguồn thật lúc 08:06 15/10/2026 (giờ Việt Nam): tăng từ 400 lên 407 review, snapshot `5bf111f038694040a540af00fc0d109f`. Toàn bộ dữ liệu tại mốc đối soát: 1,300,274 review sau khử trùng giữa hai nguồn. Minh chứng mỗi browser snapshot được đối chiếu với generation bất biến của chính nó; pipeline thật tiếp tục chạy khi đóng gói.

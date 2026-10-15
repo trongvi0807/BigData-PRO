@@ -26,3 +26,5 @@ Bỏ nút Áp dụng/Tìm phản hồi/refresh, tự cập nhật bộ lọc/t�
 - 15/10/2026: Theo phương án đã chốt, thêm pipeline tháng riêng trên HDFS và đồ thị trượt 12 tháng. Điều chỉnh mặc định bốn nền tảng theo yêu cầu bổ sung. DAG chuẩn bị chạy thành công; lượt nạp đầu đủ 111 tháng / 1.299.873 review, Spark đối soát distinct key và 377 nhóm tháng/nền tảng đạt. Bổ sung timeline quan sát live sau bước kiểm chứng; không đổi nguồn thật thành replay.
 
 - Kiểm chứng cuối: 10 unit tests đạt; browser xác nhận mặc định bốn nền tảng, xóa/reset tạo run riêng, các điểm dịch trái theo lô thực, tạm dừng, đổi chỉ số và chuyển sang timeline thật đều đạt. Restart container giữ checkpoint; sau resume số tháng không trùng và tổng loaded khớp tổng frame. Bộ lọc tự động/Clear toàn bộ dữ liệu tiếp tục đạt.
+
+- Quan sát nguồn thật lúc 08:06 15/10/2026 (giờ Việt Nam): tăng từ 400 lên 407 review, snapshot `5bf111f038694040a540af00fc0d109f`. Toàn bộ dữ liệu tại mốc đối soát: 1,300,274 review sau khử trùng giữa hai nguồn. Minh chứng mỗi browser snapshot được đối chiếu với generation bất biến của chính nó; pipeline thật tiếp tục chạy khi đóng gói.

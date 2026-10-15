@@ -24,9 +24,13 @@ def package():
         selected.update(live/name for name in ['current.json','collection_status.json','dag_evidence.json','observation_timeline.json'])
         selected.update(live.glob('stream_batch_*.json'))
         selected.update((live/'collection_runs').glob('*.json'))
-        generation=json.loads((live/'current.json').read_text())['generation']
-        snapshot=live/'generations'/generation
-        selected.update(snapshot/name for name in ['dashboard_preparation.json','dashboard_cube.csv','data_quality.json','persisted_validation.json','dashboard_validation.json'])
+        generations={json.loads((live/'current.json').read_text())['generation'],json.loads((ROOT/'outputs/live_dashboard_validation.json').read_text())['generation']}
+        for name in ['clear_filters_validation.json','combined_source_validation.json']:
+            generations.add(json.loads((ROOT/'outputs'/name).read_text())['generation'].split(':')[1])
+        for generation in generations:
+            if generation=='none':continue
+            snapshot=live/'generations'/generation
+            selected.update(snapshot/name for name in ['dashboard_preparation.json','dashboard_cube.csv','data_quality.json','persisted_validation.json','dashboard_validation.json'])
     replay=ROOT/'outputs/replay'
     selected.update(replay.glob('*.json'))
     selected.update(replay.glob('runs/*/*.json'))
