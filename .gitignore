@@ -19,3 +19,6 @@ __pycache__/
 
 submission/
 tmp/
+
+# Rebuilt final PDF is packaged with its evidence manifest.
+output/

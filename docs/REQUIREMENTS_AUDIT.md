@@ -1,6 +1,6 @@
 # Đối chiếu yêu cầu môn Big Data
 
-Theo lựa chọn mới của người dùng, phiên này chỉ hoàn thiện mã nguồn và kiểm chứng; chưa tạo báo cáo PDF cuối hoặc xác nhận đóng góp cá nhân. Không kết luận hồ sơ nộp đã đầy đủ.
+Theo yêu cầu mới, đã bổ sung báo cáo PDF cuối tại output/pdf/Bao_cao_Big_Data_ReviewLens.pdf cùng mã PySpark giải thích và kiến thức bảo vệ HDFS/Kafka/Airflow. Chưa có thông tin hành chính và bằng chứng xác nhận đóng góp cá nhân; không tự kết luận đủ mọi điều kiện nộp.
 
 Kết luận kỹ thuật cần đọc kèm outputs/submission_validation.json sau kiểm tra cuối: dự án dùng hướng phân tích dữ liệu để đáp ứng yêu cầu số 4, đồng thời bổ sung baseline ML nhãn sao thay thế. Không tự chấm điểm hoặc cam kết 10/10 vì rubric là mức tối đa và còn phụ thuộc đánh giá của thầy.
 
@@ -12,7 +12,7 @@ Kết luận kỹ thuật cần đọc kèm outputs/submission_validation.json s
 | 4a Phân tích, chỉ số/bảng/biểu đồ/insight | analyze()/Spark SQL, render_report_charts.py | platform/month/rating/aspect/length/spam CSV, PNG/SVG, báo cáo diễn giải giới hạn |
 | 4b ML bổ sung | jobs/train_sentiment.py, shared feature/inference | LR/SVM train/validation/test theo nhóm, Accuracy/P/R/F1/confusion/baseline, HDFS model và sentiment_evaluation.json; nhãn sao proxy |
 | 5 Airflow điều phối | dags/ecommerce_pipeline.py, 10 task nối dependency, retry | demo_evidence.json đúng run ID 20261015; logs/airflow_tasks đầy đủ attempt, gồm lỗi và phục hồi |
-| Báo cáo PDF, source, README | báo cáo PDF cuối chưa tạo theo lựa chọn của người dùng, Git history, package_submission.py | ZIP source/minh chứng và MANIFEST_SHA256 đối chiếu bytes/hash |
+| Báo cáo PDF, source, README | output/pdf/Bao_cao_Big_Data_ReviewLens.pdf, report_manifest.json, Git history, package_submission.py | ZIP source/minh chứng và MANIFEST_SHA256 đối chiếu bytes/hash |
 | Dashboard có ảnh và dùng output pipeline | prepare_dashboard.py → build_dashboard_index.py → dashboard/server.py | generation/cube 1.910 ô/index 1.299.873 review, dashboard_validation, dashboard_demo_validation, screenshots mới |
 | Nhật ký, lỗi, commit, đóng góp | IMPLEMENTATION_JOURNAL.md, MEMBER_TASK_AUDIT.md, git log | Có nhật ký và commit mới thật; chưa có bằng chứng cá nhân lịch sử, không dựng lại hoặc gán tác giả giả |
 | Loại mật khẩu/API key/token | init_local_env.py, .env.example trống, Compose ${...}, .gitignore, allowlist ZIP | .env không tracked và không nằm trong archive; package scanner kiểm tra byte bí mật thực không xuất hiện |
@@ -21,4 +21,4 @@ Các PDF/DOCX tiến độ và STATUS cũ chỉ mô tả phiên trước, không
 
 ## Nhánh thu thập mới theo yêu cầu bổ sung
 
-Google Play được lấy trực tiếp, không dùng replay thay nguồn thật. Bốn app đều lấy được 100 review trong lần đầu, raw JSON Kafka được lưu HDFS, processed hiện có 400 unique. DAG live_google_play_reviews chạy định kỳ 5 phút, 4 task; dashboard tự đọc snapshot mới 10 giây và giữ bộ lọc. Nguồn/thời gian/schema/số lượng/dung lượng được đối chiếu qua collection_status/collection_runs, Kafka topic, HDFS logs và metadata generation. Các run thành công tiếp theo giữ 400 unique khi không có review mới/sửa. File hướng dẫn LIVE_RUNBOOK.md và minh chứng live_dashboard_validation.json liên kết với log thực tế. PDF cuối vẫn chưa tạo theo lựa chọn của người dùng.
+Google Play được lấy trực tiếp, không dùng replay thay nguồn thật. Bốn app đều lấy được 100 review trong lần đầu, raw JSON Kafka được lưu HDFS, processed hiện có 400 unique. DAG live_google_play_reviews chạy định kỳ 5 phút, 4 task; dashboard tự đọc snapshot mới 10 giây và giữ bộ lọc. Nguồn/thời gian/schema/số lượng/dung lượng được đối chiếu qua collection_status/collection_runs, Kafka topic, HDFS logs và metadata generation. Các run thành công tiếp theo giữ 400 unique khi không có review mới/sửa. File hướng dẫn LIVE_RUNBOOK.md và minh chứng live_dashboard_validation.json liên kết với log thực tế. Đoạn này ghi trạng thái nguồn thật ở lần đầu (400 review); báo cáo cuối dùng snapshot bất biến được nêu trong report_manifest.json, không ép bằng pointer live đang tiếp tục cập nhật.

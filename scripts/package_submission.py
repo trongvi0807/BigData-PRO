@@ -1,4 +1,4 @@
-"""Package current source and reproducible technical evidence; no final PDF at user's request."""
+"""Package source, final PDF and reproducible technical evidence."""
 import hashlib
 import json
 import subprocess
@@ -11,13 +11,24 @@ ROOT=Path(__file__).resolve().parents[1]
 def package():
     target=ROOT/'submission';target.mkdir(exist_ok=True)
     tracked=subprocess.check_output(['git','ls-files','-z'],cwd=ROOT).decode().split('\0')
-    selected={ROOT/name for name in tracked if name and not name.startswith(('reports/','outputs/','artifacts/','submission/'))}
+    selected={ROOT/name for name in tracked if name and not name.startswith(('reports/','outputs/','output/','artifacts/','submission/'))}
     current=['data_quality.json','raw_inspection.json','batch_success.json','cluster_metadata.json','demo_evidence.json',
              'persisted_validation.json','dashboard_preparation.json','dashboard_validation.json','sentiment_evaluation.json',
-             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','clear_filters_validation.json','combined_source_validation.json','replay_browser_validation.json','replay_restart_validation.json','submission_validation.json','spark_query_plan.txt',
+             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','clear_filters_validation.json','combined_source_validation.json','replay_browser_validation.json','replay_restart_validation.json','submission_validation.json','report_validation.json','spark_query_plan.txt',
              'quality_before_airflow.json','platform_summary.csv','monthly_summary.csv','rating_distribution.csv',
              'aspect_mentions.csv','unmatched_low_ratings.csv','spam_sensitivity.csv','review_length_summary.csv','dashboard_cube.csv']
     selected.update(ROOT/'outputs'/name for name in current)
+    final=json.loads((ROOT/'output/pdf/report_manifest.json').read_text())
+    selected.update([ROOT/final['pdf'],ROOT/'output/pdf/report_manifest.json'])
+    selected.update(ROOT/name for name in final['artifact_hashes'])
+    from validate_final_report import secret_values, compact
+    from pypdf import PdfReader
+    values,_=secret_values()
+    pdf_text='\n'.join(p.extract_text() or '' for p in PdfReader(ROOT/final['pdf']).pages)
+    if any(value in pdf_text or compact(value) in compact(pdf_text) for value in values):
+        raise ValueError('Credential leak found in PDF text; refusing package')
+    if hashlib.sha256((ROOT/final['pdf']).read_bytes()).hexdigest()!=final['pdf_sha256']:
+        raise ValueError('Final PDF differs from report manifest')
     selected.update((ROOT/'outputs').glob('stream_batch_*.json'))
     live=ROOT/'outputs/live'
     if (live/'current.json').exists():
@@ -27,6 +38,7 @@ def package():
         generations={json.loads((live/'current.json').read_text())['generation'],json.loads((ROOT/'outputs/live_dashboard_validation.json').read_text())['generation']}
         for name in ['clear_filters_validation.json','combined_source_validation.json']:
             generations.add(json.loads((ROOT/'outputs'/name).read_text())['generation'].split(':')[1])
+        generations.add(final['live_generation'])
         for generation in generations:
             if generation=='none':continue
             snapshot=live/'generations'/generation
@@ -63,8 +75,8 @@ def package():
         contents[file]=content
         entries.append({'path':relative,'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()})
     manifest={'prepared_utc':datetime.now(timezone.utc).isoformat(),'evidence_run_id':'validation_20261015','live_evidence':'outputs/live/dag_evidence.json',
-              'scope':'Source and technical verification only; no final PDF created at user request',
-              'credential_scan':'local .env values absent from every packaged file including Git bundle','entries':entries}
+              'scope':'Source, final PDF and technical verification; identity and individual contributions remain unconfirmed',
+              'credential_scan':'local .env values absent from every packaged file including Git bundle; final PDF text also scanned','entries':entries}
     (ROOT/'MANIFEST_SHA256.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
     archive=target/'Source_va_minh_chung_Bigdata.zip'
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:

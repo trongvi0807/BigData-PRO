@@ -6,7 +6,7 @@
 
 Đã bổ sung supervised baseline LR/SVM, split nội dung 70/10/20, feature chỉ fit train, test riêng, kiểm tra portable inference khớp Spark. Nhãn là sao thay thế, không nhãn người đọc. Dashboard/index được tái tạo toàn tập; Kafka đã lưu 1.000 review unique từ replay lịch sử. DAG mới 10 task gồm mô hình và đối soát dashboard; kết quả cuối xem outputs/demo_evidence.json và outputs/submission_validation.json.
 
-Báo cáo cuối: báo cáo PDF cuối chưa tạo theo lựa chọn của người dùng. Không dùng PDF tiến độ ngày 14/10 làm báo cáo cuối. Nhật ký và kiểm tra phân công ở IMPLEMENTATION_JOURNAL.md và MEMBER_TASK_AUDIT.md. Chưa có lịch sử Git/nhật ký cá nhân cũ để xác nhận đóng góp từng thành viên. Không tạo tác giả/commit hồi tố.
+Báo cáo cuối: đã bổ sung output/pdf/Bao_cao_Big_Data_ReviewLens.pdf theo yêu cầu mới, có mã PySpark giải thích và kiến thức HDFS/Kafka/Airflow để bảo vệ. Không dùng PDF tiến độ ngày 14/10 làm báo cáo cuối. Nhật ký và kiểm tra phân công ở IMPLEMENTATION_JOURNAL.md và MEMBER_TASK_AUDIT.md. Chưa có lịch sử Git/nhật ký cá nhân cũ để xác nhận đóng góp từng thành viên. Không tạo tác giả/commit hồi tố.
 
 ## Giao diện và nguồn tự động mới
 
@@ -17,3 +17,7 @@ Báo cáo cuối: báo cáo PDF cuối chưa tạo theo lựa chọn của ngư�
 - Đã thêm màn hình **Đồ thị nạp dần**: bốn nền tảng mặc định, cửa sổ trượt 12 tháng, chuyển động theo lô HDFS thực tế, tạm dừng/tiếp tục/nạp lại riêng demo và chuyển sang đồ thị mốc thu thập thật. Hướng dẫn: [REPLAY_RUNBOOK](REPLAY_RUNBOOK.md). Truy cập `http://localhost:8090/?source=all#replay`.
 
 - Quan sát nguồn thật lúc 08:06 15/10/2026 (giờ Việt Nam): tăng từ 400 lên 407 review, snapshot `5bf111f038694040a540af00fc0d109f`. Toàn bộ dữ liệu tại mốc đối soát: 1,300,274 review sau khử trùng giữa hai nguồn. Minh chứng mỗi browser snapshot được đối chiếu với generation bất biến của chính nó; pipeline thật tiếp tục chạy khi đóng gói.
+
+## Bổ sung báo cáo theo yêu cầu mới - 15/10/2026
+
+Báo cáo dùng source/evidence hash và generation bất biến ghi tại output/pdf/report_manifest.json. validate_final_report.py kiểm tra PDF/text/hash, số liệu và bí mật; kiểm tra trực quan phải được thực hiện riêng trên PDF đã render. Tên trường/lớp/giảng viên/thành viên/MSSV: chưa cung cấp. Không gán commit tự động thành đóng góp cá nhân.

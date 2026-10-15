@@ -28,3 +28,7 @@ Bỏ nút Áp dụng/Tìm phản hồi/refresh, tự cập nhật bộ lọc/t�
 - Kiểm chứng cuối: 10 unit tests đạt; browser xác nhận mặc định bốn nền tảng, xóa/reset tạo run riêng, các điểm dịch trái theo lô thực, tạm dừng, đổi chỉ số và chuyển sang timeline thật đều đạt. Restart container giữ checkpoint; sau resume số tháng không trùng và tổng loaded khớp tổng frame. Bộ lọc tự động/Clear toàn bộ dữ liệu tiếp tục đạt.
 
 - Quan sát nguồn thật lúc 08:06 15/10/2026 (giờ Việt Nam): tăng từ 400 lên 407 review, snapshot `5bf111f038694040a540af00fc0d109f`. Toàn bộ dữ liệu tại mốc đối soát: 1,300,274 review sau khử trùng giữa hai nguồn. Minh chứng mỗi browser snapshot được đối chiếu với generation bất biến của chính nó; pipeline thật tiếp tục chạy khi đóng gói.
+
+## 15/10/2026 - Báo cáo cuối và kiến thức bảo vệ
+
+Người dùng yêu cầu mới tạo PDF đầy đủ, mã PySpark kèm giải thích và kiến thức HDFS/Kafka/Airflow; yêu cầu này thay lựa chọn trước chỉ hoàn thiện mã nguồn. scripts/build_final_report.py dựng nội dung từ source, artifact và snapshot có generation; giữ rõ lịch sử/review thật/replay. Thêm câu hỏi bảo vệ, lệnh chạy và phụ lục source. scripts/validate_final_report.py kiểm hash, text, geometry, số liệu và secret; render riêng để rà soát bố cục. Không thay đổi pipeline hay tạo log chạy giả. Thông tin hành chính được người dùng xác nhận chưa cung cấp; đóng góp cá nhân vẫn chưa kiểm chứng.

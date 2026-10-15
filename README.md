@@ -76,7 +76,19 @@ Khía cạnh là luật đề cập đa nhãn; cảm xúc demo ở mức toàn r
 
 ## Hồ sơ nộp và kiểm chứng
 
-Theo lựa chọn của người dùng, phiên này chỉ hoàn thiện mã nguồn và kiểm chứng; chưa tạo báo cáo PDF cuối. Báo cáo tiến độ cũ chưa phản ánh các bổ sung mới. Bộ source/minh chứng: submission/Source_va_minh_chung_Bigdata.zip, tạo bằng scripts/package_submission.py. Kiểm tra outputs/submission_validation.json và MANIFEST_SHA256.json. File phân công gốc được giữ trong docs/PHAN_CONG_GOC.txt; kế hoạch không được dùng làm bằng chứng đóng góp cá nhân. Git history mới ghi công việc tự động thực sự từ phiên này, không tạo commit giả/hồi tố cho sinh viên.
+Báo cáo cuối nằm tại `output/pdf/Bao_cao_Big_Data_ReviewLens.pdf`, có kiến thức HDFS/Kafka/Airflow, câu hỏi bảo vệ và mã PySpark kèm giải thích. `output/pdf/report_manifest.json` ghi hash nguồn/minh chứng và snapshot thật được dùng. Thông tin trường/lớp/giảng viên/tên-MSSV chưa cung cấp; đóng góp cá nhân chưa được xác nhận từ lịch sử thực tế.
+
+Dựng lại trong WSL Ubuntu (không cần chạy lại toàn pipeline nếu artifacts đối chiếu vẫn còn):
+
+```bash
+sudo apt-get install -y python3-reportlab python3-pypdf python3-pil poppler-utils fonts-dejavu-core
+python3 scripts/build_final_report.py
+python3 scripts/validate_final_report.py
+```
+
+Render bằng `pdftoppm -png output/pdf/Bao_cao_Big_Data_ReviewLens.pdf tmp/pdfs/page`, xem **mọi trang** rồi mới dùng `python3 scripts/validate_final_report.py --visual-review-complete`. Cờ này là xác nhận của người đã kiểm tra trực quan, không phải kiểm tra tự động. Dựng lại PDF làm xác nhận cũ hết hiệu lực theo hash.
+
+Sau đó chạy `python3 scripts/check_submission.py` và `python3 scripts/package_submission.py`. ZIP `submission/Source_va_minh_chung_Bigdata.zip` gồm source, PDF, log, ảnh và manifest; không gồm `.env` hay CSV gốc. File phân công `docs/PHAN_CONG_GOC.txt` là kế hoạch; lịch sử commit tự động không chứng minh đóng góp cá nhân của sinh viên.
 
 ```bash
 docker compose exec -T spark-client python -m unittest discover -s tests -v

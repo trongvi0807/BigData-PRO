@@ -57,12 +57,22 @@ def verify():
     require(read('outputs/replay_restart_validation.json')['verification']=='passed','Replay restart checkpoint failed')
     validations=[json.loads(p.read_text()) for p in (ROOT/'outputs/replay').glob('validation_*.json')]
     require(any(v['verification']=='passed' and v['actual_hdfs_rows']==v['unique_keys']==quality['clean_rows'] for v in validations),'No completed replay HDFS proof')
+    final=read('output/pdf/report_manifest.json')
+    pdf=ROOT/final['pdf']
+    require(pdf.is_file() and hashlib.sha256(pdf.read_bytes()).hexdigest()==final['pdf_sha256'],'Final PDF fingerprint failed')
+    report_check=read('outputs/report_validation.json')
+    require(report_check['verification']=='passed' and report_check['pdf_sha256']==final['pdf_sha256'],'Final report validation missing or stale')
+    require(report_check.get('visual_review_complete') is True,'Final PDF visual review has not been completed')
+    for relative,digest in final['source_hashes'].items():
+        require(hashlib.sha256((ROOT/relative).read_bytes()).hexdigest()==digest,'Final report source fingerprint differs: '+relative)
+    report_live=read('outputs/live/generations/'+final['live_generation']+'/dashboard_preparation.json')
+    require(report_live['processed_rows']==final['live_reviews'],'Final report immutable live count differs')
     commits=subprocess.check_output(['git','log','--format=%h %s'],cwd=ROOT,text=True)
     require(bool(commits.strip()),'Missing actual Git history')
-    report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Technical saved artifacts and source/log cross-checks; final report excluded at user request; not a live cluster check',
+    report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Technical saved artifacts, final PDF and source/log cross-checks; not a live cluster check',
             'airflow_tasks':len(tasks),'clean_rows':quality['clean_rows'],'ml_label_source':ml['label_source'],
             'automatic_filters':'passed','historical_replay':'passed','clear_filters':'passed','combined_reviews':clear['total_reviews'],'real_google_play_reviews':live_meta['processed_rows'],'real_browser_snapshot_reviews':browser_meta['processed_rows'],
-            'live_source':'google_play_live','final_report':'Not created at user request',
+            'live_source':'google_play_live','final_report':final['pdf'],'final_report_sha256':final['pdf_sha256'],'final_report_pages':report_check['page_count'],
             'individual_contributions':'Not independently attributable from the supplied plan; no fabricated member commits'}
     (ROOT/'outputs/submission_validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
     print(json.dumps(report,ensure_ascii=False,indent=2))
