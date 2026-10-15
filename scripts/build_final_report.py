@@ -101,17 +101,17 @@ def figure(path,caption,height=330):
  scale=min(CW/iw,height/ih);image=Image(str(ROOT/path),width=iw*scale,height=ih*scale)
  story.append(KeepTogether([image,Spacer(1,7),Paragraph(caption,styles['small'])]))
 def architecture():
- d=Drawing(CW,240)
+ d=Drawing(CW,190)
  def box(x,y,label):
   d.add(Rect(x,y,112,44,rx=5,ry=5,fillColor=LIGHT,strokeColor=TEAL,strokeWidth=.7))
   for i,line in enumerate(label.split('|')):d.add(String(x+56,y+28-i*13,line,fontName='Body',fontSize=8.5,textAnchor='middle',fillColor=INK))
  def arrow(x,y):
   d.add(Line(x,y,x+14,y,strokeColor=GRAY,strokeWidth=1));d.add(Polygon([x+14,y,x+9,y+3,x+9,y-3],fillColor=GRAY,strokeColor=GRAY))
  labels=[['CSV Kaggle|2013 - 08/2022','HDFS raw|CSV + fingerprint','Spark|Clean / SQL / ML','HDFS / API|Parquet / cube'],['Google Play|Thu thập thật','Kafka|3 partition','Spark Streaming|Checkpoint HDFS','HDFS live|Snapshot kiểm tra'],['HDFS prepared|Lô theo tháng','HDFS replay|Copy + commit lô','Snapshot tiến độ|Số đếm thật','Dashboard|Cửa sổ 12 mốc']]
- for row,y in zip(labels,[165,95,25]):
+ for row,y in zip(labels,[130,70,10]):
   for i,label in enumerate(row):box(i*128,y,label)
   for i in range(3):arrow(i*128+113,y+22)
- d.add(String(CW/2,225,'AIRFLOW: LỊCH - DEPENDENCY - RETRY - LOG',fontName='Bold',fontSize=9.3,textAnchor='middle',fillColor=TEAL));story.append(d)
+ d.add(String(CW/2,180,'AIRFLOW: LỊCH - DEPENDENCY - RETRY - LOG',fontName='Bold',fontSize=9.3,textAnchor='middle',fillColor=TEAL));story.append(d)
 class Report(BaseDocTemplate):
  def afterFlowable(self,flowable):
   if isinstance(flowable,Paragraph) and flowable.style.name=='H1':
