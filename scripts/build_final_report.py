@@ -10,7 +10,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import BaseDocTemplate,PageTemplate,Frame,Paragraph,Spacer,PageBreak,Table,TableStyle,Preformatted,Image,KeepTogether
+from reportlab.platypus import BaseDocTemplate,PageTemplate,Frame,Paragraph,Spacer,PageBreak,Table,TableStyle,Preformatted,XPreformatted,Image,KeepTogether
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.graphics.shapes import Drawing,Rect,String,Line,Polygon
 ROOT=Path(__file__).resolve().parents[1];DEST=ROOT/'output/pdf/Bao_cao_Big_Data_ReviewLens.pdf'
@@ -62,7 +62,13 @@ def block(text,numbered=False):
   width=96 if numbered else 100;prefix=f'{number:03d}  ' if numbered else ''
   pieces=textwrap.wrap(line.expandtabs(4),width=width,replace_whitespace=False,drop_whitespace=False,break_long_words=True,break_on_hyphens=False) or ['']
   lines.append(prefix+pieces[0]);lines.extend(('  |  ' if numbered else '   | ')+v for v in pieces[1:])
- story.append(Preformatted('\n'.join(lines),styles['code']))
+ rendered='\n'.join(lines)
+ mono_chars=pdfmetrics.getFont('Mono').face.charWidths
+ body_chars=pdfmetrics.getFont('Body').face.charWidths
+ missing={char for char in rendered if not char.isspace() and ord(char) not in body_chars}
+ if missing:raise ValueError('Unsupported code glyphs: '+repr(missing))
+ markup=''.join(escape(char) if char.isspace() or ord(char) in mono_chars else '<font name="Body">'+escape(char)+'</font>' for char in rendered)
+ story.append(XPreformatted(markup,styles['code']))
 def shell(text):
  """Wrap commands at unquoted spaces with executable shell continuations."""
  lines=[]
