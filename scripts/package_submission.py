@@ -14,19 +14,24 @@ def package():
     selected={ROOT/name for name in tracked if name and not name.startswith(('reports/','outputs/','artifacts/','submission/'))}
     current=['data_quality.json','raw_inspection.json','batch_success.json','cluster_metadata.json','demo_evidence.json',
              'persisted_validation.json','dashboard_preparation.json','dashboard_validation.json','sentiment_evaluation.json',
-             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','clear_filters_validation.json','combined_source_validation.json','submission_validation.json','spark_query_plan.txt',
+             'sentiment_model.json','dashboard_demo_validation.json','auto_filters_validation.json','live_dashboard_validation.json','clear_filters_validation.json','combined_source_validation.json','replay_browser_validation.json','replay_restart_validation.json','submission_validation.json','spark_query_plan.txt',
              'quality_before_airflow.json','platform_summary.csv','monthly_summary.csv','rating_distribution.csv',
              'aspect_mentions.csv','unmatched_low_ratings.csv','spam_sensitivity.csv','review_length_summary.csv','dashboard_cube.csv']
     selected.update(ROOT/'outputs'/name for name in current)
     selected.update((ROOT/'outputs').glob('stream_batch_*.json'))
     live=ROOT/'outputs/live'
     if (live/'current.json').exists():
-        selected.update(live/name for name in ['current.json','collection_status.json','dag_evidence.json'])
+        selected.update(live/name for name in ['current.json','collection_status.json','dag_evidence.json','observation_timeline.json'])
         selected.update(live.glob('stream_batch_*.json'))
         selected.update((live/'collection_runs').glob('*.json'))
         generation=json.loads((live/'current.json').read_text())['generation']
         snapshot=live/'generations'/generation
         selected.update(snapshot/name for name in ['dashboard_preparation.json','dashboard_cube.csv','data_quality.json','persisted_validation.json','dashboard_validation.json'])
+    replay=ROOT/'outputs/replay'
+    selected.update(replay.glob('*.json'))
+    selected.update(replay.glob('runs/*/*.json'))
+    selected.update(replay.glob('runs/*/*.log'))
+    selected.update((ROOT/'outputs/logs/replay_airflow_tasks').rglob('*.log'))
     selected.update((ROOT/'outputs/logs/live_airflow_tasks').rglob('*.log'))
     selected.add(ROOT/'artifacts/audit/dataset_profile.json')
     selected.update((ROOT/'outputs/logs').glob('*20261015.*'))
@@ -44,12 +49,14 @@ def package():
             value=line.split('=',1)[1].strip()
             if value: secrets.append(value.encode())
     entries=[]
+    contents={}
     for file in sorted(selected):
         if not file.is_file(): raise ValueError(f'Missing requested evidence: {file.relative_to(ROOT)}')
         relative=file.relative_to(ROOT).as_posix()
         if file.name=='.env' or file.suffix in ['.sqlite','.db'] or file.name=='vietnamese_ecommerce_review.csv': raise ValueError('Disallowed data/secret file')
         content=file.read_bytes()
         if any(secret in content for secret in secrets): raise ValueError(f'Credential leak found in {relative}; refusing package')
+        contents[file]=content
         entries.append({'path':relative,'bytes':len(content),'sha256':hashlib.sha256(content).hexdigest()})
     manifest={'prepared_utc':datetime.now(timezone.utc).isoformat(),'evidence_run_id':'validation_20261015','live_evidence':'outputs/live/dag_evidence.json',
               'scope':'Source and technical verification only; no final PDF created at user request',
@@ -57,7 +64,7 @@ def package():
     (ROOT/'MANIFEST_SHA256.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2))
     archive=target/'Source_va_minh_chung_Bigdata.zip'
     with zipfile.ZipFile(archive,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
-        for file in sorted(selected): z.write(file,file.relative_to(ROOT).as_posix())
+        for file in sorted(selected): z.writestr(file.relative_to(ROOT).as_posix(),contents[file])
         z.write(ROOT/'MANIFEST_SHA256.json','MANIFEST_SHA256.json')
     with zipfile.ZipFile(archive) as z:
         if z.testzip(): raise ValueError('Archive integrity failed')

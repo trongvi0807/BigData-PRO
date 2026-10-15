@@ -18,6 +18,8 @@ import sqlite3
 import tempfile
 import threading
 import unicodedata
+import uuid
+from review_analytics.io import atomic_write_text
 from urllib.parse import parse_qs, urlsplit
 
 PLATFORMS = ["Shopee", "Lazada", "Sendo", "Tiki"]
@@ -316,8 +318,10 @@ class CombinedStore(Store):
         return data
 
 
-def handler_class(store):
+def handler_class(store, replay_control=None):
     live_root = store.root / 'live'
+    replay_root = store.root / 'replay'
+    control_root = Path(replay_control) if replay_control else replay_root
     live_stores = {}
     combined_stores = {}
     source_lock = threading.Lock()
@@ -364,6 +368,24 @@ def handler_class(store):
             self.wfile.write(body)
 
         def do_POST(self):
+            if urlsplit(self.path).path == '/api/replay/control':
+                try:
+                    origin = self.headers.get('Origin')
+                    if origin and urlsplit(origin).netloc != self.headers.get('Host'):
+                        raise ValueError('Nguồn yêu cầu không hợp lệ.')
+                    length = int(self.headers.get('Content-Length', '0'))
+                    if not 0 < length <= 1024:
+                        raise ValueError('Yêu cầu điều khiển không hợp lệ.')
+                    payload = json.loads(self.rfile.read(length))
+                    action = payload.get('action')
+                    speed = payload.get('interval_seconds', 4)
+                    if action not in ['reset', 'pause', 'resume', 'speed'] or type(speed) is not int or speed not in [2, 4, 8]:
+                        raise ValueError('Chọn thao tác và tốc độ hợp lệ.')
+                    request = {'request_id': uuid.uuid4().hex, 'action': action, 'interval_seconds': speed}
+                    atomic_write_text(control_root / 'control.json', json.dumps(request))
+                    return self.respond(json.dumps({'accepted': True, **request}).encode(), status=202)
+                except (ValueError, json.JSONDecodeError) as error:
+                    return self.respond(json.dumps({'error': str(error)}, ensure_ascii=False).encode(), status=400)
             if urlsplit(self.path).path != '/api/predict':
                 return self.respond(b'{"error":"Not found"}', status=404)
             try:
@@ -390,7 +412,11 @@ def handler_class(store):
             params = parse_qs(parsed.query, keep_blank_values=True)
             try:
                 source, active, sources = choose_source(params)
-                if parsed.path == "/api/health":
+                if parsed.path == "/api/replay":
+                    data = read_json(replay_root / 'status.json', {'phase': 'preparing', 'frames': [], 'loaded_reviews': 0})
+                elif parsed.path == "/api/live-timeline":
+                    data = {'source_mode': 'google_play_live', 'points': read_json(live_root / 'observation_timeline.json', [])}
+                elif parsed.path == "/api/health":
                     active.snapshot()
                     data = {"status": "ready"}
                 elif parsed.path == "/api/bootstrap":
@@ -420,9 +446,9 @@ def handler_class(store):
                             writer.writerow([row["review_key"], row["platform"], row["at"], row["score"],
                                 "|".join(row["aspects"]), row["spam"], csv_safe(row["content"])])
                     return self.respond(("\ufeff" + stream.getvalue()).encode("utf-8"), "text/csv; charset=utf-8", download=parsed.path.split("/")[-1])
-                elif parsed.path in ["/", "/app.js", "/styles.css", "/demo.html"]:
+                elif parsed.path in ["/", "/app.js", "/styles.css", "/demo.html", "/replay.js"]:
                     filename = "index.html" if parsed.path == "/" else parsed.path[1:]
-                    mime = {"index.html": "text/html", "app.js": "text/javascript", "styles.css": "text/css", "demo.html": "text/html"}[filename]
+                    mime = {"index.html": "text/html", "app.js": "text/javascript", "styles.css": "text/css", "demo.html": "text/html", "replay.js": "text/javascript"}[filename]
                     return self.respond((WEB / filename).read_bytes(), mime + "; charset=utf-8")
                 else:
                     return self.respond(b'{"error":"Not found"}', status=404)
@@ -443,7 +469,8 @@ if __name__ == "__main__":
     parser.add_argument("--port", type=int, default=8090)
     parser.add_argument("--outputs", type=Path, default=Path(__file__).resolve().parents[1] / "outputs")
     parser.add_argument("--cache", type=Path, help="Optional local serving cache, useful with Docker Desktop bind mounts")
+    parser.add_argument("--replay-control", type=Path, help="Writable directory for isolated replay controls")
     args = parser.parse_args()
-    server = ThreadingHTTPServer((args.host, args.port), handler_class(Store(args.outputs, args.cache)))
+    server = ThreadingHTTPServer((args.host, args.port), handler_class(Store(args.outputs, args.cache), args.replay_control))
     print(f"ReviewLens ready at http://{args.host}:{args.port}", flush=True)
     server.serve_forever()

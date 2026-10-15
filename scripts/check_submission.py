@@ -51,11 +51,16 @@ def verify():
     combined=read('outputs/combined_source_validation.json')
     require(clear['verification']==combined['verification']=='passed','Combined source/Clear validation failed')
     require(clear['total_reviews']==combined['total_reviews'],'Combined browser/index counts differ')
+    replay=read('outputs/replay_browser_validation.json')
+    require(replay['verification']=='passed' and replay['window_months']==12 and replay['default_platforms']==4,'Replay browser failed')
+    require(read('outputs/replay_restart_validation.json')['verification']=='passed','Replay restart checkpoint failed')
+    validations=[json.loads(p.read_text()) for p in (ROOT/'outputs/replay').glob('validation_*.json')]
+    require(any(v['verification']=='passed' and v['actual_hdfs_rows']==v['unique_keys']==quality['clean_rows'] for v in validations),'No completed replay HDFS proof')
     commits=subprocess.check_output(['git','log','--format=%h %s'],cwd=ROOT,text=True)
     require(bool(commits.strip()),'Missing actual Git history')
     report={'verified_utc':datetime.now(timezone.utc).isoformat(),'verification':'passed','scope':'Technical saved artifacts and source/log cross-checks; final report excluded at user request; not a live cluster check',
             'airflow_tasks':len(tasks),'clean_rows':quality['clean_rows'],'ml_label_source':ml['label_source'],
-            'automatic_filters':'passed','clear_filters':'passed','combined_reviews':clear['total_reviews'],'real_google_play_reviews':live_meta['processed_rows'],
+            'automatic_filters':'passed','historical_replay':'passed','clear_filters':'passed','combined_reviews':clear['total_reviews'],'real_google_play_reviews':live_meta['processed_rows'],
             'live_source':'google_play_live','final_report':'Not created at user request',
             'individual_contributions':'Not independently attributable from the supplied plan; no fabricated member commits'}
     (ROOT/'outputs/submission_validation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))

@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Quan sát phản hồi và các khía cạnh được nhắc trong đánh giá ứng dụng TMĐT Việt Nam.">
   <title>ReviewLens · Quan sát trải nghiệm khách hàng</title>
-  <link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script>
+  <link rel="stylesheet" href="/styles.css"><script src="/replay.js" defer></script><script src="/app.js" defer></script>
 </head>
 <body>
   <aside class="sidebar">
@@ -12,6 +12,7 @@
     <div class="nav-label">KHÔNG GIAN PHÂN TÍCH</div>
     <nav aria-label="Trang phân tích">
       <button class="nav-item active" data-view="overview"><span>◫</span> Tổng quan</button>
+      <button class="nav-item" data-view="replay"><span>▷</span> Đồ thị nạp dần</button>
       <button class="nav-item" data-view="aspects"><span>▥</span> Khía cạnh</button>
       <button class="nav-item" data-view="reviews"><span>≡</span> Tra cứu phản hồi</button>
       <button class="nav-item" data-view="pipeline"><span>⌁</span> Luồng dữ liệu</button>
@@ -35,11 +36,23 @@
     <div id="content" class="hidden">
       <section id="view-overview" class="view active">
         <div class="kpi-grid" id="kpis"></div>
-        <div class="chart-grid"><article class="card wide-chart"><div class="card-head"><div><div class="eyebrow">BIẾN ĐỘNG THEO THỜI GIAN</div><h2>Đánh giá thấp thay đổi ra sao?</h2></div><div class="segmented" id="trend-mode"><button data-mode="rate" class="active">Tỷ lệ</button><button data-mode="volume">Số review</button></div></div><div class="chart-toolbar"><div class="legend" id="trend-legend"></div><select id="granularity" aria-label="Độ chi tiết biểu đồ thời gian"><option value="year">Theo năm</option><option value="month">Theo tháng</option></select></div><div class="chart" id="trend-chart"></div><div class="chart-note">Mỗi tỷ lệ dùng số review của cùng sàn và giai đoạn. Điểm ít review có thể biến động mạnh.</div><button class="chart-export" data-chart="trend-chart">↓ Tải biểu đồ SVG</button></article>
+        <div class="chart-grid"><article class="card wide-chart"><div class="card-head"><div><div class="eyebrow">BIẾN ĐỘNG THEO THỜI GIAN</div><h2>Đánh giá thấp thay đổi ra sao?</h2></div><div class="segmented" id="trend-mode"><button data-mode="rate" class="active">Tỷ lệ</button><button data-mode="volume">Số review</button></div></div><div class="chart-toolbar"><div class="legend" id="trend-legend"></div><select id="granularity" aria-label="Độ chi tiết biểu đồ thời gian"><option value="year">Theo năm</option><option value="month">Theo tháng</option></select></div><div class="chart" id="trend-chart"></div><div class="chart-note">Mỗi tỷ lệ dùng số review của cùng sàn và giai đoạn. Điểm ít review có thể biến động mạnh.</div><button class="text-button" data-goto="replay">Xem đồ thị nạp dần →</button> <button class="chart-export" data-chart="trend-chart">↓ Tải biểu đồ SVG</button></article>
         <article class="card comparison-card"><div class="card-head"><div><div class="eyebrow">SO SÁNH TRONG SNAPSHOT</div><h2>Tỷ lệ đánh giá 1–2 sao</h2></div></div><div id="platform-comparison"></div><div class="chart-note">Khác biệt trong tập Google Play; không đại diện mức hài lòng của toàn bộ khách hàng.</div></article></div>
         <div class="chart-grid bottom-grid"><article class="card"><div class="card-head"><div><div class="eyebrow">KHÍA CẠNH ĐƯỢC NHẮC</div><h2>Ưu tiên đối chiếu phản hồi</h2></div><button class="text-button" data-goto="aspects">Xem chi tiết →</button></div><div id="priority-list"></div><div class="chart-note">Thứ tự theo lượng đề cập trong review 1–2 sao, là đầu mối rà soát.</div></article>
         <article class="card"><div class="card-head"><div><div class="eyebrow">PHÂN BỐ ĐÁNH GIÁ</div><h2>Bức tranh đủ năm mức sao</h2></div></div><div class="chart" id="rating-chart"></div><button class="chart-export" data-chart="rating-chart">↓ Tải biểu đồ SVG</button></article></div>
         <div class="method-note"><span>ⓘ</span><p><b>Đọc đúng kết quả.</b> Sao thấp là tín hiệu thay thế cho không hài lòng. Một review có thể nhắc nhiều khía cạnh; đề cập một khía cạnh chưa xác nhận khía cạnh đó bị chê. <span id="method-source">Tập dữ liệu lịch sử kết thúc tháng 08/2022.</span></p></div>
+      </section>
+      <section id="view-replay" class="view">
+        <article class="card replay-card">
+          <div class="card-head"><div><div class="eyebrow" id="replay-kind">DEMO NẠP LẠI DỮ LIỆU LỊCH SỬ</div><h2 id="replay-title">Theo dõi từng tháng được nạp</h2></div><button class="button primary" id="replay-switch">Xem review mới thật →</button></div>
+          <div class="replay-progress"><div><strong id="replay-month">Đang chuẩn bị dữ liệu…</strong><p id="replay-count">Đang đọc tiến độ từ pipeline</p></div><span class="soft-badge" id="replay-phase" role="status">Đang chờ</span></div>
+          <div class="replay-track" id="replay-track" role="progressbar" aria-label="Tiến độ nạp dữ liệu lịch sử" aria-valuemin="0" aria-valuemax="100"><span id="replay-progress-fill"></span></div>
+          <div class="replay-toolbar"><div class="replay-platforms" id="replay-platforms" aria-label="Nền tảng trên đồ thị nạp dần"></div><label>Chỉ số <select id="replay-metric"><option value="rate">Tỷ lệ review 1–2 sao</option><option value="mean">Điểm trung bình</option></select></label></div>
+          <div class="replay-chart" id="replay-chart"></div>
+          <div class="replay-controls" id="replay-controls"><button class="button ghost" id="replay-pause">Tạm dừng</button><button class="button ghost" id="replay-reset">Nạp lại từ đầu</button><label>Tốc độ <select id="replay-speed"><option value="2">Nhanh · tối thiểu 2 giây/lô</option><option value="4" selected>Vừa · tối thiểu 4 giây/lô</option><option value="8">Chậm · tối thiểu 8 giây/lô</option></select></label></div>
+          <p class="chart-note" id="replay-note">Mỗi điểm là kết quả thật của một lô tháng đã nạp trên HDFS. Khung nhìn giữ tối đa 12 tháng, tự trượt khi có tháng mới. Trục tỷ lệ cố định 0–100%.</p>
+          <div class="replay-feedback hidden" id="replay-feedback" role="status"></div>
+        </article>
       </section>
       <section id="view-aspects" class="view"><div class="card"><div class="card-head"><div><div class="eyebrow">KHÍA CẠNH × NỀN TẢNG</div><h2>Nội dung nào thường được nhắc trong review sao thấp?</h2></div><span class="soft-badge">Nhận diện đề cập bằng luật</span></div><p class="section-help">Mỗi ô = số review 1–2 sao nhắc khía cạnh / tổng review 1–2 sao của sàn đang chọn. Bấm một ô để xem phản hồi.</p><div class="table-scroll" id="aspect-heatmap"></div></div>
         <div class="chart-grid bottom-grid"><article class="card"><div class="card-head"><h2>Độ bao phủ của bộ khía cạnh</h2></div><div id="coverage-chart"></div><p class="chart-note">Phần chưa gán có thể là phản hồi chung hoặc bị luật bỏ sót; cần đọc mẫu độc lập để phân biệt.</p><button class="text-button" id="show-unmatched">Tra cứu review chưa gán →</button></article><article class="card"><div class="card-head"><h2>Cách chuyển kết quả thành việc rà soát</h2></div><div id="investigation-list"></div></article></div>

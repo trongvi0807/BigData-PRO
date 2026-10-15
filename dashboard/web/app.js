@@ -2,8 +2,8 @@
 const $ = (id) => document.getElementById(id);
 const colors = {Shopee:"#ed7657",Lazada:"#7a63d7",Sendo:"#c9963f",Tiki:"#2b9cae"};
 const tints = {Shopee:"#fff1eb",Lazada:"#f2effc",Sendo:"#fbf4e5",Tiki:"#eaf7fa"};
-const names = {overview:"Tổng quan",aspects:"Khía cạnh",reviews:"Tra cứu phản hồi",pipeline:"Luồng dữ liệu"};
-const headings = {overview:["Từ phản hồi đến ưu tiên cải thiện.","Nhìn thấy xu hướng, tìm khía cạnh và đối chiếu bằng phản hồi thực tế."],aspects:["Tìm những chủ đề cần được lắng nghe.","So sánh đề cập khía cạnh, kiểm tra độ bao phủ và mở phản hồi minh họa."],reviews:["Đối chiếu bằng tiếng nói của người dùng.","Tra cứu trên toàn bộ review đã làm sạch, không chỉ một tập ví dụ chọn trước."],pipeline:["Theo dõi hành trình của dữ liệu.","Giải thích xử lý phân tán, điều phối và phục hồi bằng kết quả chạy thật."]};
+const names = {replay:"Đồ thị nạp dần",overview:"Tổng quan",aspects:"Khía cạnh",reviews:"Tra cứu phản hồi",pipeline:"Luồng dữ liệu"};
+const headings = {replay:["Quan sát dữ liệu tiến về phía trước.","Theo dõi từng lô lịch sử hoặc những lần thu thập review mới thật."],overview:["Từ phản hồi đến ưu tiên cải thiện.","Nhìn thấy xu hướng, tìm khía cạnh và đối chiếu bằng phản hồi thực tế."],aspects:["Tìm những chủ đề cần được lắng nghe.","So sánh đề cập khía cạnh, kiểm tra độ bao phủ và mở phản hồi minh họa."],reviews:["Đối chiếu bằng tiếng nói của người dùng.","Tra cứu trên toàn bộ review đã làm sạch, không chỉ một tập ví dụ chọn trước."],pipeline:["Theo dõi hành trình của dữ liệu.","Giải thích xử lý phân tán, điều phối và phục hồi bằng kết quả chạy thật."]};
 const advice = {app:"Rà soát phản hồi về đăng nhập, cập nhật và lỗi thao tác ứng dụng.",delivery:"Đối chiếu thời gian giao, phí vận chuyển và tình huống giao sai hoặc thiếu.",product:"Kiểm tra phản hồi về chất lượng, khác mô tả và đóng gói.",support:"Xem tình huống tư vấn, tiếp nhận và xử lý khiếu nại.",payment:"Đối chiếu lỗi thanh toán, trừ tiền và phương thức thanh toán.",promotion:"Kiểm tra điều kiện mã giảm giá, mức giá và khuyến mãi.",returns:"Rà soát trải nghiệm hủy đơn, đổi trả và hoàn tiền."};
 const state = {boot:null,data:null,view:"overview",filters:null,trend:"rate",offset:0,reviewResult:null,reviewToken:0,filterToken:0,polling:false,initToken:0,source:new URLSearchParams(location.search).get("source")||""};
 const num = (n) => n == null ? "—" : Number(n).toLocaleString("vi-VN");
@@ -94,7 +94,7 @@ async function loadReviews(){
 }
 
 function drill(aspect,platform="all"){$("review-aspect").value=aspect;$("review-platform").value=platform;$("review-score").value="low";$("review-query").value="";state.offset=0;setView("reviews");}
-function setView(view,{fetchReviews=true}={}){if(!names[view])view="overview";state.view=view;document.querySelectorAll(".view").forEach(el=>el.classList.toggle("active",el.id==="view-"+view));document.querySelectorAll(".nav-item").forEach(el=>el.classList.toggle("active",el.dataset.view===view));$("filter-form").classList.toggle("hidden",view==="pipeline");document.querySelector(".filter-caption").classList.toggle("hidden",view==="pipeline");$("export-summary").classList.toggle("hidden",view==="pipeline");$("crumb").textContent=names[view];$("page-title").textContent=headings[view][0];$("page-subtitle").textContent=headings[view][1];if(location.hash!=="#"+view)history.replaceState(null,"","#"+view);if(fetchReviews&&view==="reviews"&&state.data)loadReviews();window.scrollTo({top:0,behavior:"smooth"});}
+function setView(view,{fetchReviews=true}={}){if(!names[view])view="overview";state.view=view;document.querySelectorAll(".view").forEach(el=>el.classList.toggle("active",el.id==="view-"+view));document.querySelectorAll(".nav-item").forEach(el=>el.classList.toggle("active",el.dataset.view===view));$("filter-form").classList.toggle("hidden",["pipeline","replay"].includes(view));document.querySelector(".filter-caption").classList.toggle("hidden",["pipeline","replay"].includes(view));$("export-summary").classList.toggle("hidden",["pipeline","replay"].includes(view));$("crumb").textContent=names[view];$("page-title").textContent=headings[view][0];$("page-subtitle").textContent=headings[view][1];if(location.hash!=="#"+view)history.replaceState(null,"","#"+view);document.querySelector(".filter-help").classList.toggle("hidden",view==="replay");document.querySelector(".source-choice").classList.toggle("hidden",view==="replay");$("snapshot-kind").classList.toggle("hidden",view==="replay");$("collection-status").classList.toggle("hidden",view==="replay"||state.source==="historical");$("auto-update").textContent=view==="replay"?"Tự cập nhật · 1 giây":"Tự cập nhật · 10 giây";if(view==="replay")ReplayView.refresh();if(fetchReviews&&view==="reviews"&&state.data)loadReviews();window.scrollTo({top:0,behavior:"smooth"});}
 
 function filterValues(){
  const platforms=[...document.querySelectorAll("#platform-filters input:checked")].map(input=>input.value);
@@ -156,7 +156,7 @@ function renderSnapshot(){
  $("stream-note").textContent=state.source!=="historical"?"Dữ liệu từ Google Play thật, khử trùng phiên bản bằng checkpoint. Phiên bản review mới nhất được dùng cho biểu đồ.":"Replay dữ liệu lịch sử; checkpoint ngăn lưu trùng qua các lần chạy.";
  $("method-source").textContent=state.source==="all"?"Tổng hợp dataset lịch sử và review Google Play thật mới thu thập. Review trùng ID dùng phiên bản mới; không bổ sung dữ liệu giả vào những tháng không có nguồn.":state.source==="live"?"Review mới được thu thập trực tiếp từ Google Play. Ngày viết review giữ nguyên; thời điểm thu thập hiển thị riêng.":"Tập dữ liệu lịch sử kết thúc tháng 08/2022.";
  const poll=boot.collection;
- $("collection-status").classList.toggle("hidden",state.source==="historical");
+ $("collection-status").classList.toggle("hidden",state.source==="historical"||state.view==="replay");
  if(poll?.completed_utc)$("collection-status").textContent=`Lần thu thập ${new Date(poll.completed_utc).toLocaleString("vi-VN",{timeZone:"Asia/Ho_Chi_Minh"})}: ${num(poll.new_reviews)} review mới, ${num(poll.updated_reviews)} cập nhật. ${poll.errors.length?"Một số nguồn chưa lấy được: "+poll.errors.map(e=>e.platform).join(", ")+".":""}`;
 }
 async function refreshSnapshot(){
@@ -177,7 +177,7 @@ async function refreshSnapshot(){
     await applyFilters({resetPage:false});
    }
   }
-  $("auto-update").textContent="Tự cập nhật · 10 giây";
+  $("auto-update").textContent=state.view==="replay"?"Tự cập nhật · 1 giây":"Tự cập nhật · 10 giây";
  }catch(error){$("auto-update").textContent="Đang chờ dữ liệu · tự thử lại";}
  finally{state.polling=false;}
 }

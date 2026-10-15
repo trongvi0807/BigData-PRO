@@ -91,3 +91,5 @@ Nguồn mặc định `Toàn bộ dữ liệu` (`?source=all`) ghép hai đầu 
 Bấm `Clear bộ lọc` hoặc xóa trống một ô tháng sẽ trở về toàn bộ dữ liệu, chọn mọi sàn, toàn khoảng tháng, bỏ loại spam, từ khóa, số sao và khía cạnh. Bộ lọc vẫn tự chạy khi thay đổi. Khi snapshot mới có tháng mới, mốc đầu/cuối tự mở rộng nếu đang chọn toàn khoảng; phạm vi tùy chọn được giữ lại.
 
 Minh chứng: `outputs/clear_filters_validation.json`, `outputs/combined_source_validation.json`, `outputs/logs/clear_filters_browser_20261015.log` và `outputs/screenshots/11-clear-all-data-20261015.png`. Kiểm chứng độc lập: `python3 scripts/verify_combined_source.py`.
+
+- Đã thêm màn hình **Đồ thị nạp dần**: bốn nền tảng mặc định, cửa sổ trượt 12 tháng, chuyển động theo lô HDFS thực tế, tạm dừng/tiếp tục/nạp lại riêng demo và chuyển sang đồ thị mốc thu thập thật. Hướng dẫn: [REPLAY_RUNBOOK](docs/REPLAY_RUNBOOK.md). Truy cập `http://localhost:8090/?source=all#replay`.

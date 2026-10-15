@@ -169,15 +169,25 @@ services:
     command: scheduler
     hostname: airflow-scheduler
     mem_limit: 3g
+  replay-runner:
+    <<: *runtime
+    profiles: [dashboard, orchestration]
+    command: [python, /workspace/jobs/replay_months.py]
+    hostname: replay-runner
+    environment:
+      SPARK_LOCAL_IP: replay-runner
+    mem_limit: 2g
+    depends_on: [namenode, datanode, spark-master]
   dashboard:
     restart: unless-stopped
     image: bigdata-review-runtime:local
     profiles: [dashboard, orchestration]
-    command: [python, /workspace/dashboard/server.py, --host, 0.0.0.0, --port, "8090", --outputs, /exports, --cache, /cache]
+    command: [python, /workspace/dashboard/server.py, --host, 0.0.0.0, --port, "8090", --outputs, /exports, --cache, /cache, --replay-control, /replay-control]
     volumes:
       - .:/workspace:ro
       - ./outputs:/exports:ro
       - dashboard_cache:/cache
+      - ./outputs/replay:/replay-control
     ports: ["127.0.0.1:8090:8090"]
     mem_limit: 512m
     healthcheck:
