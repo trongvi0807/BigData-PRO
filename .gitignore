@@ -20,6 +20,6 @@ __pycache__/
 submission/
 tmp/
 
-# Rebuilt final PDF is packaged with its evidence manifest.
+# Generated documents stay outside the source ZIP.
 output/
 MANIFEST_SHA256.json
